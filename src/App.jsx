@@ -31,17 +31,16 @@ function pSort(l){const d={高:0,中:1,低:2};return[...l].sort((a,b)=>{const ad
 function doSort(l,by){const a=[...l];switch(by){case"created_desc":return a.sort((x,y)=>(y.created||"").localeCompare(x.created||""));case"created_asc":return a.sort((x,y)=>(x.created||"").localeCompare(y.created||""));case"subject":return a.sort((x,y)=>SUBJECTS.indexOf(x.subject)-SUBJECTS.indexOf(y.subject));case"next_date":return a.sort((x,y)=>(x.nextDate||"9999").localeCompare(y.nextDate||"9999"));case"difficulty":{const o={高:0,中:1,低:2};return a.sort((x,y)=>(o[x.difficulty]??1)-(o[y.difficulty]??1));}case"name":return a.sort((x,y)=>x.name.localeCompare(y.name,"zh-Hant"));default:return a;}}
 function subSt(iss,sub){const s=iss.filter(i=>i.subject===sub);const t=s.length;if(!t)return{total:0,mastered:0,avgPct:0,rr:0};const m=s.filter(i=>i.mastered).length;const avg=s.reduce((a,i)=>a+i.stage,0)/t;let tr=0,rm=0;s.forEach(i=>{const e=(i.errors||[]).length;tr+=i.stage+e;rm+=i.stage;});return{total:t,mastered:m,avgPct:Math.round(avg/6*100),rr:tr>0?Math.round(rm/tr*100):0};}
 
-// 筆記渲染：只保留 [[連結]] 功能
+// 筆記渲染：只保留 [[連結]] 功能（whitespace:pre-wrap 保留換行）
 function rNotes(text,issues,onClick){
   if(!text?.trim())return null;
-  return text.split("\n").map((line,i)=>{
-    const parts=line.split(/(\[\[[^\]]+\]\])/).map((p,j)=>{
-      const m=p.match(/^\[\[([^\]]+)\]\]$/);
-      if(m){const f=issues.find(x=>x.name===m[1]);return<span key={j} onClick={e=>{e.stopPropagation();f&&onClick?.(f.id);}} style={{color:"#818cf8",cursor:f?"pointer":"default",textDecoration:"underline",textDecorationStyle:"dotted",textUnderlineOffset:2}}>{m[1]}{!f&&<span style={{color:"#f87171",fontSize:9,marginLeft:2}}>?</span>}</span>;}
-      return<span key={j}>{p}</span>;
-    });
-    return<div key={i} style={{fontSize:13,color:"#eef0f8",lineHeight:1.8,marginBottom:2}}>{parts}</div>;
+  const parts=text.split(/(\[\[[^\]]+\]\])/).map((p,j)=>{
+    const m=p.match(/^\[\[([^\]]+)\]\]$/);
+    if(!m)return<span key={j}>{p}</span>;
+    const f=issues.find(x=>x.name===m[1]);
+    return<span key={j} onClick={e=>{e.stopPropagation();f&&onClick?.(f.id);}} style={{color:"#818cf8",cursor:f?"pointer":"default",textDecoration:"underline",textDecorationStyle:"dotted",textUnderlineOffset:2}}>{m[1]}{!f&&<span style={{color:"#f87171",fontSize:9,marginLeft:2}}>?</span>}</span>;
   });
+  return<div style={{fontSize:13,color:"#eef0f8",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{parts}</div>;
 }
 
 const C={bg:"#0f1117",sf:"#171a23",cd:"#1d2133",bd:"#282d42",tx:"#eef0f8",mt:"#8891b0",ac:"#6366f1",am:"#1c1e40",dg:"#f87171",dm:"#2d1a1a",ok:"#34d399",om:"#1a3328"};
@@ -64,6 +63,8 @@ const ST=({s})=>{const c=SUB_C[s]||C.ac;return<span className="tag" style={{back
 const CT=({t})=>{const c=tcc(t);return<span className="tag" style={{background:c+"20",color:c,border:`1px solid ${c}45`,fontWeight:600}}>{t}</span>;};
 const SI=({v,oc,p})=><div className="sw"><input value={v} onChange={e=>oc(e.target.value)} placeholder={p||"搜尋…"}/>{v&&<button className="sc" onClick={()=>oc("")}>✕</button>}</div>;
 const Lb=({ch})=><div style={{fontSize:12,color:C.mt,marginBottom:6,fontWeight:600,letterSpacing:.3}}>{ch}</div>;
+const secT={fontSize:11,color:C.mt,fontWeight:600,marginBottom:12,textTransform:"uppercase",letterSpacing:.5};
+const Card=({title,children,m=14})=><div style={{marginBottom:m}}>{title&&<div style={secT}>{title}</div>}<div style={{background:C.cd,borderRadius:14,padding:16,border:`1px solid ${C.bd}`}}>{children}</div></div>;
 const Ov=({ch,oc})=><div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.8)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={oc}><div style={{background:C.cd,border:`1px solid ${C.bd}`,borderRadius:16,minWidth:300,maxWidth:560,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>{ch}</div></div>;
 const RB=({onRate,sm})=><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:sm?5:8}}>{RATINGS.map(r=><button key={r.id} onClick={()=>onRate(r)} style={{background:r.color+"15",color:r.color,border:`1px solid ${r.color}35`,padding:sm?"8px 2px":"14px 4px",borderRadius:10,display:"flex",flexDirection:"column",alignItems:"center",gap:sm?2:5}}><span style={{fontSize:sm?16:22}}>{r.icon}</span><span style={{fontSize:sm?9:11,fontWeight:700}}>{r.label}</span>{!sm&&<span style={{fontSize:9,color:C.mt}}>{r.delta>0?"+":""}{r.delta}階</span>}</button>)}</div>;
 
@@ -171,7 +172,7 @@ function EP({issue,issues,allTags,editIssue,onDone}){
 
 // ═══ 主 App ═══
 export default function App(){
-  const[tab,setTab]=useState("dashboard");const[issues,setIssues]=useState(null);const[log,setLog]=useState({});const[sprint,setSprint]=useState(false);const[limit,setLimit]=useState(30);const[sync,setSync]=useState("loading");const[js,setJs]=useState("");const[vid,setVid]=useState(null);const[fc,_setFc]=useState(false);const fcR=useRef(false);const setFc=v=>{fcR.current=v;_setFc(v);};const[draft,setDraft]=useState({...EMPTY_DRAFT});const ss=useRef(Date.now());
+  const[tab,setTab]=useState("dashboard");const[issues,setIssues]=useState(null);const[log,setLog]=useState({});const[sprint,setSprint]=useState(false);const[limit,setLimit]=useState(30);const[sync,setSync]=useState("loading");const[vid,setVid]=useState(null);const[fc,_setFc]=useState(false);const fcR=useRef(false);const setFc=v=>{fcR.current=v;_setFc(v);};const[draft,setDraft]=useState({...EMPTY_DRAFT});const ss=useRef(Date.now());
 
   const load=useCallback(async()=>{try{setSync("loading");const[iR,lR,sR,dR]=await Promise.all([supabase.from("issues").select("*"),supabase.from("study_log").select("*"),supabase.from("settings").select("*").eq("key","sprint_mode").maybeSingle(),supabase.from("settings").select("*").eq("key","daily_limit").maybeSingle()]);if(iR.error)throw iR.error;setIssues((iR.data||[]).map(db2i));const l={};(lR.data||[]).forEach(r=>{l[r.date]=r.minutes;});setLog(l);setSprint(sR.data?.value===true);if(dR.data?.value)setLimit(dR.data.value);setSync("synced");}catch(e){console.error(e);setSync("error");}},[]);
 
@@ -212,9 +213,9 @@ export default function App(){
         </div>
       </div>
       <div style={{padding:"16px 16px 0",maxWidth:680,margin:"0 auto"}}>
-        {tab==="dashboard"&&<Dash issues={issues} due={todayDue} allN={allDue.length} ovf={ovf} limit={limit} setLim={setLim} rate={rate} gDue={gDue} openD={openD} startFC={()=>setFc(true)}/>}
+        {tab==="dashboard"&&<Dash issues={issues} due={todayDue} ovf={ovf} limit={limit} setLim={setLim} rate={rate} gDue={gDue} openD={openD} startFC={()=>setFc(true)}/>}
         {tab==="add"&&<AddP issues={issues} onAdd={addI} setTab={setTab} allTags={allTags} draft={draft} setDraft={setDraft}/>}
-        {tab==="overview"&&<OvW issues={issues} rate={rate} isDue={isDue} editI={editI} delM={delM} del1={del1} allTags={allTags} js={js} setJs={setJs}/>}
+        {tab==="overview"&&<OvW issues={issues} rate={rate} isDue={isDue} editI={editI} delM={delM} del1={del1} allTags={allTags} openD={openD}/>}
         {tab==="stats"&&<StatsP issues={issues} log={log}/>}
       </div>
       {vi&&<Ov ch={<Det issue={vi} issues={issues} allTags={allTags} editI={editI} del1={del1} rate={rate} isDue={isDue} openD={openD} oc={()=>setVid(null)}/>} oc={()=>setVid(null)}/>}
@@ -294,7 +295,7 @@ function Det({issue:is,issues,allTags,editI,del1,rate,isDue,openD,oc}){
 }
 
 // ═══ Dashboard ═══
-function Dash({issues,due,allN,ovf,limit,setLim,rate,gDue,openD,startFC}){
+function Dash({issues,due,ovf,limit,setLim,rate,gDue,openD,startFC}){
   const[el,sEl]=useState(false);const[tmp,sTmp]=useState(limit);
   const total=issues.length;const mastered=issues.filter(i=>i.mastered).length;
   const masteredPct=total?Math.round(mastered/total*100):0;
@@ -302,40 +303,27 @@ function Dash({issues,due,allN,ovf,limit,setLim,rate,gDue,openD,startFC}){
   const gr=SUBJECTS.reduce((a,s)=>{const d=due.filter(i=>i.subject===s);if(d.length)a[s]=d;return a;},{});
   const up=issues.filter(i=>!i.mastered&&ddf(gDue(i))>0&&ddf(gDue(i))<=7).sort((a,b)=>gDue(a).localeCompare(gDue(b)));
   return<div>
-    {/* 圓形進度環 */}
     <div style={{display:"flex",justifyContent:"space-around",padding:"24px 8px 20px",background:C.cd,borderRadius:16,marginBottom:14,border:`1px solid ${C.bd}`}}>
       <Ring pct={overallPct} color={C.ac} label="整體進度" value={`${overallPct}%`} size={88}/>
       <Ring pct={masteredPct} color={C.ok} label="已掌握率" value={`${masteredPct}%`} size={88}/>
       <Ring pct={Math.min(due.length/Math.max(limit,1)*100,100)} color={due.length>0?"#fb923c":C.ok} label="今日待複習" value={due.length} size={88}/>
     </div>
-    {/* 閃卡按鈕 */}
     {due.length>0
       ?<button onClick={startFC} style={{width:"100%",background:`linear-gradient(135deg,${C.ac},#8b5cf6)`,color:"#fff",padding:14,fontSize:15,fontWeight:700,borderRadius:14,marginBottom:14,border:"none"}}>🃏 開始閃卡複習 · {due.length} 張</button>
       :<div style={{textAlign:"center",padding:"12px 16px",background:C.om,borderRadius:12,marginBottom:14,color:C.ok,fontSize:14,fontWeight:600}}>✓ 今日複習完成！</div>}
-    {/* 週視圖 */}
-    <div style={{background:C.cd,borderRadius:14,padding:16,marginBottom:14,border:`1px solid ${C.bd}`}}>
-      <div style={{fontSize:11,color:C.mt,fontWeight:600,marginBottom:12,textTransform:"uppercase",letterSpacing:.5}}>本週複習</div>
-      <WeekBar issues={issues}/>
-    </div>
-    {/* 每日上限 */}
+    <Card title="本週複習"><WeekBar issues={issues}/></Card>
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,padding:"10px 14px",background:C.sf,borderRadius:12,border:`1px solid ${C.bd}`,flexWrap:"wrap"}}>
       <span style={{fontSize:12,color:C.mt}}>每日上限：</span>
       {!el?<><span style={{fontSize:14,fontWeight:700}}>{limit} 題</span>{ovf>0&&<span style={{fontSize:11,color:C.dg}}>（{ovf} 題延後）</span>}<button onClick={()=>{sTmp(limit);sEl(true);}} style={{background:"transparent",color:C.ac,border:`1px solid ${C.ac}`,fontSize:11,padding:"3px 10px",marginLeft:"auto"}}>調整</button></>
         :<><input type="number" value={tmp} onChange={e=>sTmp(Number(e.target.value))} min={1} max={200} style={{width:64,textAlign:"center",padding:"4px 6px",fontSize:14}}/><button onClick={()=>{setLim(tmp);sEl(false);}} style={{background:C.ac,color:"#fff",fontSize:11,padding:"5px 12px",fontWeight:600}}>確認</button><button onClick={()=>sEl(false)} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:11,padding:"5px 10px"}}>取消</button></>}
     </div>
-    {/* 各科進度 */}
-    <div style={{background:C.cd,borderRadius:14,padding:16,marginBottom:14,border:`1px solid ${C.bd}`}}>
-      <div style={{fontSize:11,color:C.mt,fontWeight:600,marginBottom:14,textTransform:"uppercase",letterSpacing:.5}}>各科進度</div>
-      {SUBJECTS.map(s=><SRow key={s} sub={s} iss={issues}/>)}
-    </div>
-    {/* 今日待複習 */}
+    <Card title="各科進度">{SUBJECTS.map(s=><SRow key={s} sub={s} iss={issues}/>)}</Card>
     {Object.keys(gr).length>0&&<div style={{marginBottom:14}}>
-      <div style={{fontSize:11,color:C.mt,fontWeight:600,marginBottom:12,textTransform:"uppercase",letterSpacing:.5}}>今日複習（{due.length}）</div>
+      <div style={secT}>今日複習（{due.length}）</div>
       {Object.entries(gr).map(([s,l])=><div key={s} style={{marginBottom:14}}><div style={{fontSize:12,fontWeight:700,color:SUB_C[s],marginBottom:6}}>{s}</div><div style={{display:"flex",flexDirection:"column",gap:6}}>{l.map(i=><Row key={i.id} i={i} rate={rate} openD={openD}/>)}</div></div>)}
     </div>}
-    {/* 未來 7 天 */}
     {up.length>0&&<div style={{marginBottom:14}}>
-      <div style={{fontSize:11,color:C.mt,fontWeight:600,marginBottom:12,textTransform:"uppercase",letterSpacing:.5}}>未來 7 天到期</div>
+      <div style={secT}>未來 7 天到期</div>
       <div style={{display:"flex",flexDirection:"column",gap:6}}>{up.map(i=>{const d=ddf(gDue(i));return<div key={i.id} onClick={()=>openD(i.id)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:C.sf,border:`1px solid ${C.bd}`,borderRadius:10,cursor:"pointer"}}><span style={{fontSize:13,fontWeight:500}}>{i.name}</span><div style={{display:"flex",gap:6,alignItems:"center"}}><ST s={i.subject}/><span style={{fontSize:11,color:C.mt,flexShrink:0}}>{d}天後</span></div></div>;})}</div>
     </div>}
   </div>;
@@ -380,9 +368,8 @@ function AddP({issues,onAdd,setTab,allTags,draft,setDraft}){
 }
 
 // ═══ 總覽 ═══
-function OvW({issues,rate,isDue,editI,delM,del1,allTags,js,setJs}){
-  const[sf,sSf]=useState("全部");const[stf,sStf]=useState("全部");const[tf,sTf]=useState("全部");const[sq,sSq]=useState(js||"");const[sb,sSb]=useState("created_desc");const[eid,sEid]=useState(null);const[sel,sSel]=useState(new Set());const[dm,sDm]=useState(false);
-  useEffect(()=>{if(js){sSq(js);setJs("");}},[js]);
+function OvW({issues,rate,isDue,editI,delM,del1,allTags,openD}){
+  const[sf,sSf]=useState("全部");const[stf,sStf]=useState("全部");const[tf,sTf]=useState("全部");const[sq,sSq]=useState("");const[sb,sSb]=useState("created_desc");const[eid,sEid]=useState(null);const[sel,sSel]=useState(new Set());const[dm,sDm]=useState(false);
   let f=issues;if(sf!=="全部")f=f.filter(i=>i.subject===sf);if(stf==="今日待複習")f=f.filter(isDue);else if(stf==="進行中")f=f.filter(i=>!i.mastered&&!isDue(i));else if(stf==="已掌握")f=f.filter(i=>i.mastered);if(tf!=="全部")f=f.filter(i=>(i.tags||[]).includes(tf));if(sq.trim()){const q=sq.trim().toLowerCase();f=f.filter(i=>i.name.toLowerCase().includes(q)||i.subject.includes(q)||(i.notes||"").toLowerCase().includes(q)||(i.tags||[]).some(t=>t.includes(q)));}f=doSort(f,sb);
   const tS=id=>sSel(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
   return<div>
@@ -398,13 +385,13 @@ function OvW({issues,rate,isDue,editI,delM,del1,allTags,js,setJs}){
       </div>
     </div>
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
-      {f.map(i=><Cd key={i.id} i={i} issues={issues} due={isDue(i)} rate={rate} editing={eid===i.id} sEid={sEid} editI={editI} dm={dm} sel={sel.has(i.id)} tS={()=>tS(i.id)} del1={del1} allTags={allTags}/>)}
+      {f.map(i=><Cd key={i.id} i={i} issues={issues} due={isDue(i)} rate={rate} editing={eid===i.id} sEid={sEid} editI={editI} dm={dm} sel={sel.has(i.id)} tS={()=>tS(i.id)} del1={del1} allTags={allTags} openD={openD}/>)}
       {!f.length&&<div style={{color:C.mt,textAlign:"center",padding:48,fontSize:14}}>沒有符合條件的爭點</div>}
     </div>
   </div>;
 }
 
-function Cd({i,issues,due,rate,editing,sEid,editI,dm,sel,tS,del1,allTags}){
+function Cd({i,issues,due,rate,editing,sEid,editI,dm,sel,tS,del1,allTags,openD}){
   const[sn,sSn]=useState(false);const[cd,sCd]=useState(false);const[sr,sSr]=useState(false);
   const itv=gitv(i.difficulty);const rel=gRel(i,issues);const bl=gBack(i,issues);
   return<div style={{background:sel?C.dm:C.cd,border:`1px solid ${sel?C.dg:due?C.dg+"80":C.bd}`,borderRadius:12,padding:"14px 16px"}}>
@@ -417,7 +404,7 @@ function Cd({i,issues,due,rate,editing,sEid,editI,dm,sel,tS,del1,allTags}){
         </div>
         {(i.tags||[]).length>0&&<div style={{marginBottom:8,display:"flex",flexWrap:"wrap",gap:4}}>{i.tags.map(t=><CT key={t} t={t}/>)}</div>}
         <div style={{marginBottom:10}}><div style={{display:"flex",gap:3,marginBottom:5}}>{itv.map((_,x)=><div key={x} style={{flex:1,height:4,borderRadius:2,background:x<i.stage?C.ac:C.bd}}/>)}</div><div style={{fontSize:11,color:C.mt}}>階段 {Math.min(i.stage,6)}/6{!i.mastered&&i.nextDate&&` · 下次：${i.nextDate}（${ddf(i.nextDate)===0?"今天":ddf(i.nextDate)>0?`${ddf(i.nextDate)}天後`:`逾期${-ddf(i.nextDate)}天`}）`}</div></div>
-        {(i.notes||"").trim()&&<div style={{marginBottom:8}}><span onClick={()=>sSn(!sn)} style={{fontSize:11,color:C.ac,cursor:"pointer",fontWeight:600}}>{sn?"▼ 收起筆記":"▶ 查看筆記"}</span>{sn&&<div style={{marginTop:6,background:C.sf,borderRadius:8,padding:"10px 12px"}}>{rNotes(i.notes,issues,null)}</div>}</div>}
+        {(i.notes||"").trim()&&<div style={{marginBottom:8}}><span onClick={()=>sSn(!sn)} style={{fontSize:11,color:C.ac,cursor:"pointer",fontWeight:600}}>{sn?"▼ 收起筆記":"▶ 查看筆記"}</span>{sn&&<div style={{marginTop:6,background:C.sf,borderRadius:8,padding:"10px 12px"}}>{rNotes(i.notes,issues,openD)}</div>}</div>}
         {rel.length>0&&<div style={{marginBottom:7}}><span style={{fontSize:11,color:C.mt}}>關聯：</span>{rel.map(r=><span key={r.id} className="tag" style={{marginLeft:4,background:C.am,color:C.ac,fontSize:11}}>{r.name}</span>)}</div>}
         {bl.length>0&&<div style={{marginBottom:7}}><span style={{fontSize:11,color:C.mt}}>被提及：</span>{bl.map(r=><span key={r.id} className="tag" style={{marginLeft:4,background:C.sf,color:C.mt,fontSize:11,border:`1px solid ${C.bd}`}}>{r.name}</span>)}</div>}
         {(i.errors||[]).length>0&&<div style={{marginBottom:8,background:C.sf,borderRadius:8,padding:"8px 10px"}}><div style={{fontSize:10,color:C.mt,marginBottom:3}}>錯誤紀錄</div>{i.errors.map((e,x)=><div key={x} style={{fontSize:11,color:C.dg}}>{e.date} · {e.reason}</div>)}</div>}
@@ -437,16 +424,15 @@ function StatsP({issues,log}){
   issues.forEach(i=>(i.errors||[]).forEach(e=>{if(ec[e.reason]!==undefined)ec[e.reason]++;}));
   const me=Math.max(...Object.values(ec),1);
   const cf=issues.map(i=>({...i,cc:(i.errors||[]).filter(e=>e.reason==="與其他爭點混淆").length})).filter(i=>i.cc>0).sort((a,b)=>b.cc-a.cc).slice(0,5);
-  const card=(title,ch)=><div style={{marginBottom:20}}><div style={{fontSize:11,color:C.mt,fontWeight:600,marginBottom:12,textTransform:"uppercase",letterSpacing:.5}}>{title}</div><div style={{background:C.cd,borderRadius:14,padding:16,border:`1px solid ${C.bd}`}}>{ch}</div></div>;
   return<div>
-    {card("各科複習進度",SUBJECTS.map(s=><SRow key={s} sub={s} iss={issues}/>))}
-    {card("每日複習時間（近 30 天）",<>
+    <Card title="各科複習進度" m={20}>{SUBJECTS.map(s=><SRow key={s} sub={s} iss={issues}/>)}</Card>
+    <Card title="每日複習時間（近 30 天）" m={20}>
       <div style={{display:"flex",alignItems:"flex-end",gap:2,height:80}}>
         {l30.map((d,i)=>{const h=Math.round(d.mins/mm*72);return<div key={i} title={`${d.date}: ${d.mins}分`} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",height:"100%"}}><div style={{width:"100%",height:h||2,background:d.date===td()?C.ac:C.am,borderRadius:2,minHeight:2}}/></div>;})}
       </div>
       <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.mt,marginTop:6}}><span>30天前</span><span>今天</span></div>
-    </>)}
-    {card("失敗原因排行",Object.entries(ec).sort((a,b)=>b[1]-a[1]).map(([r,c])=><div key={r} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><span style={{width:120,fontSize:12,color:C.mt,flexShrink:0}}>{r}</span><div className="prog" style={{flex:1}}><div className="progf" style={{width:`${Math.round(c/me*100)}%`,background:C.dg}}/></div><span style={{fontSize:12,color:C.mt,width:24,textAlign:"right"}}>{c}</span></div>))}
-    {cf.length>0&&card("高頻混淆爭點",cf.map(i=><div key={i.id} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.bd}`,fontSize:13}}><span>{i.name}<span style={{marginLeft:6}}><ST s={i.subject}/></span></span><span style={{color:C.dg,fontWeight:700}}>{i.cc} 次</span></div>))}
+    </Card>
+    <Card title="失敗原因排行" m={20}>{Object.entries(ec).sort((a,b)=>b[1]-a[1]).map(([r,c])=><div key={r} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><span style={{width:120,fontSize:12,color:C.mt,flexShrink:0}}>{r}</span><div className="prog" style={{flex:1}}><div className="progf" style={{width:`${Math.round(c/me*100)}%`,background:C.dg}}/></div><span style={{fontSize:12,color:C.mt,width:24,textAlign:"right"}}>{c}</span></div>)}</Card>
+    {cf.length>0&&<Card title="高頻混淆爭點" m={20}>{cf.map(i=><div key={i.id} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.bd}`,fontSize:13}}><span>{i.name}<span style={{marginLeft:6}}><ST s={i.subject}/></span></span><span style={{color:C.dg,fontWeight:700}}>{i.cc} 次</span></div>)}</Card>}
   </div>;
 }
