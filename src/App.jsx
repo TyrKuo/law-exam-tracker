@@ -230,6 +230,9 @@ export default function App(){
 function FCM({issues,queue,rate,exit}){
   const[snapQueue]=useState(()=>[...queue]);
   const[idx,setIdx]=useState(0);const[fl,setFl]=useState(false);const[res,setRes]=useState([]);const[done,setDone]=useState(false);const[busy,setBusy]=useState(false);
+  const startRef=useRef(Date.now());const[elapsed,setElapsed]=useState(0);
+  useEffect(()=>{const id=setInterval(()=>setElapsed(Math.floor((Date.now()-startRef.current)/1000)),1000);return()=>clearInterval(id);},[]);
+  const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
   const cur=snapQueue[idx];const rel=cur?gRel(cur,issues):[];const bl=cur?gBack(cur,issues):[];
 
   async function go(r){
@@ -241,12 +244,13 @@ function FCM({issues,queue,rate,exit}){
 
   if(!snapQueue.length)return<div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:20}}><div style={{fontSize:48}}>🎉</div><div style={{fontSize:20,fontWeight:700}}>今天沒有到期爭點！</div><button onClick={exit} style={{background:C.ac,color:"#fff",padding:"12px 32px",fontWeight:600,fontSize:15}}>返回</button></div>;
 
-  if(done){const ct={};RATINGS.forEach(r=>ct[r.id]=0);res.forEach(r=>ct[r.rating.id]++);return<div style={{minHeight:"100vh",background:C.bg,padding:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}><div style={{fontSize:48}}>📊</div><div style={{fontSize:20,fontWeight:700}}>完成！共 {res.length} 張</div><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,width:"100%",maxWidth:400}}>{RATINGS.map(r=><div key={r.id} style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:12,padding:14,textAlign:"center"}}><div style={{fontSize:24}}>{r.icon}</div><div style={{fontSize:11,color:r.color,fontWeight:700,marginTop:4}}>{r.label}</div><div style={{fontSize:26,fontWeight:700,marginTop:4}}>{ct[r.id]}</div></div>)}</div><button onClick={exit} style={{background:C.ac,color:"#fff",padding:"12px 32px",fontWeight:600,fontSize:15,marginTop:8}}>返回首頁</button></div>;}
+  if(done){const ct={};RATINGS.forEach(r=>ct[r.id]=0);res.forEach(r=>ct[r.rating.id]++);return<div style={{minHeight:"100vh",background:C.bg,padding:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}><div style={{fontSize:48}}>📊</div><div style={{fontSize:20,fontWeight:700}}>完成！共 {res.length} 張</div><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,width:"100%",maxWidth:400}}>{RATINGS.map(r=><div key={r.id} style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:12,padding:14,textAlign:"center"}}><div style={{fontSize:24}}>{r.icon}</div><div style={{fontSize:11,color:r.color,fontWeight:700,marginTop:4}}>{r.label}</div><div style={{fontSize:26,fontWeight:700,marginTop:4}}>{ct[r.id]}</div></div>)}</div><div style={{fontSize:14,color:C.mt}}>總用時 <span style={{color:C.ok,fontFamily:"monospace",fontWeight:700}}>{fmt(elapsed)}</span></div><button onClick={exit} style={{background:C.ac,color:"#fff",padding:"12px 32px",fontWeight:600,fontSize:15,marginTop:8}}>返回首頁</button></div>;}
 
   return<div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 16px",background:C.sf,borderBottom:`1px solid ${C.bd}`}}>
       <button onClick={exit} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:12,padding:"5px 12px"}}>✕ 退出</button>
       <span style={{fontSize:13,color:C.mt,fontWeight:600}}>{idx+1} / {snapQueue.length}</span>
+      <span style={{fontSize:13,color:C.ok,fontFamily:"monospace",fontWeight:600}}>⏱ {fmt(elapsed)}</span>
       <div className="prog" style={{width:100}}><div className="progf" style={{width:`${idx/snapQueue.length*100}%`,background:C.ac}}/></div>
     </div>
     <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px 16px",maxWidth:600,margin:"0 auto",width:"100%"}}>
