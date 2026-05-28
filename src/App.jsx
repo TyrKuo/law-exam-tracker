@@ -43,7 +43,7 @@ function rNotes(text,issues,onClick){
   return<div style={{fontSize:13,color:"#eef0f8",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{parts}</div>;
 }
 
-const C={bg:"#0f1117",sf:"#171a23",cd:"#1d2133",bd:"#282d42",tx:"#eef0f8",mt:"#8891b0",ac:"#6366f1",am:"#1c1e40",dg:"#f87171",dm:"#2d1a1a",ok:"#34d399",om:"#1a3328"};
+const C={bg:"#0d0d0d",sf:"#161616",cd:"#1f1f1f",bd:"#2e2e2e",tx:"#efefef",mt:"#7a7a7a",ac:"#d4d4d4",am:"#262626",dg:"#f87171",dm:"#2a1818",ok:"#4ade80",om:"#172215"};
 
 const css=`*{box-sizing:border-box;margin:0;padding:0}html,body,#root{background:${C.bg};color:${C.tx};min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:${C.bd};border-radius:2px}
@@ -188,7 +188,7 @@ export default function App(){
   async function del1(id){setIssues(a=>a.filter(i=>i.id!==id));if(vid===id)setVid(null);setSync("saving");await supabase.from("issues").delete().eq("id",id);setSync("synced");}
   async function togSp(){const n=!sprint;setSprint(n);await supabase.from("settings").upsert({key:"sprint_mode",value:n});}
   async function setLim(v){const val=Math.max(1,Math.min(200,v));setLimit(val);await supabase.from("settings").upsert({key:"daily_limit",value:val});}
-  async function savePractice(sub,cnt,mins){await supabase.from("practice_log").upsert({date:td(),subject:sub,count:parseInt(cnt)||0,minutes:parseInt(mins)||0},{onConflict:"date,subject"});}
+  async function savePractice(sub,cnt,mins){const{error}=await supabase.from("practice_log").upsert({date:td(),subject:sub,count:parseInt(cnt)||0,minutes:parseInt(mins)||0},{onConflict:"date,subject"});if(error)throw error;}
 
   const openD=id=>setVid(id);
   const allTags=[...new Set((issues||[]).flatMap(i=>i.tags||[]))].sort();
@@ -427,7 +427,7 @@ function StatsP({issues,log,plog,savePractice}){
   const[draft,setDraft]=useState(()=>{const d={};SUBJECTS.forEach(s=>{d[s]={count:"",minutes:""};});return d;});
   const[saved,setSaved]=useState({});
   useEffect(()=>{setDraft(d=>{const anyFilled=SUBJECTS.some(s=>d[s]?.count||d[s]?.minutes);if(anyFilled)return d;const n={};SUBJECTS.forEach(s=>{n[s]={count:plog[today]?.[s]?.count??'',minutes:plog[today]?.[s]?.minutes??''};});return n;});},[plog,today]);
-  async function handleBlur(sub){const{count,minutes}=draft[sub];await savePractice(sub,count,minutes);setSaved(p=>({...p,[sub]:true}));setTimeout(()=>setSaved(p=>({...p,[sub]:false})),1200);}
+  async function handleBlur(sub){const{count,minutes}=draft[sub];if(!count&&!minutes)return;try{await savePractice(sub,count,minutes);setSaved(p=>({...p,[sub]:"ok"}));setTimeout(()=>setSaved(p=>({...p,[sub]:null})),1200);}catch{setSaved(p=>({...p,[sub]:"err"}));setTimeout(()=>setSaved(p=>({...p,[sub]:null})),2500);}}
 
   const days7=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d.toISOString().split("T")[0];});
   const sub7=SUBJECTS.map(s=>({sub:s,total:days7.reduce((a,d)=>a+(plog[d]?.[s]?.count||0),0)}));
@@ -462,7 +462,7 @@ function StatsP({issues,log,plog,savePractice}){
         <input type="number" min="0" inputMode="numeric" value={draft[s]?.minutes??""} placeholder="—"
           onChange={e=>setDraft(p=>({...p,[s]:{...p[s],minutes:e.target.value}}))}
           onBlur={()=>handleBlur(s)} style={inS}/>
-        <span style={{fontSize:11,color:C.ok,opacity:saved[s]?1:0,transition:"opacity .3s",textAlign:"center"}}>✓</span>
+        <span style={{fontSize:11,color:saved[s]==="err"?C.dg:C.ok,opacity:saved[s]?1:0,transition:"opacity .3s",textAlign:"center"}}>{saved[s]==="err"?"!":"✓"}</span>
       </div>)}
     </div>
 
