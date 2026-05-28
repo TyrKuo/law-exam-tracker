@@ -188,7 +188,7 @@ export default function App(){
   async function del1(id){setIssues(a=>a.filter(i=>i.id!==id));if(vid===id)setVid(null);setSync("saving");await supabase.from("issues").delete().eq("id",id);setSync("synced");}
   async function togSp(){const n=!sprint;setSprint(n);await supabase.from("settings").upsert({key:"sprint_mode",value:n});}
   async function setLim(v){const val=Math.max(1,Math.min(200,v));setLimit(val);await supabase.from("settings").upsert({key:"daily_limit",value:val});}
-  async function savePractice(sub,cnt,mins){const{error}=await supabase.from("practice_log").upsert({date:td(),subject:sub,count:parseInt(cnt)||0,minutes:parseInt(mins)||0},{onConflict:"date,subject"});if(error)throw error;}
+  async function savePractice(sub,cnt,mins){const{error}=await supabase.from("practice_log").upsert({date:td(),subject:sub,count:parseInt(cnt)||0,minutes:parseInt(mins)||0},{onConflict:"date,subject"});if(error){if(error.message?.includes("schema cache")||error.message?.includes("practice_log"))throw new Error("資料表不存在，請在 Supabase SQL Editor 執行建表語句");throw error;}}
 
   const openD=id=>setVid(id);
   const allTags=[...new Set((issues||[]).flatMap(i=>i.tags||[]))].sort();
