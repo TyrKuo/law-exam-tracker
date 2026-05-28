@@ -172,11 +172,11 @@ function EP({issue,issues,allTags,editIssue,onDone}){
 
 // ═══ 主 App ═══
 export default function App(){
-  const[tab,setTab]=useState("dashboard");const[issues,setIssues]=useState(null);const[log,setLog]=useState({});const[sprint,setSprint]=useState(false);const[limit,setLimit]=useState(30);const[sync,setSync]=useState("loading");const[vid,setVid]=useState(null);const[fc,_setFc]=useState(false);const fcR=useRef(false);const setFc=v=>{fcR.current=v;_setFc(v);};const[draft,setDraft]=useState({...EMPTY_DRAFT});const ss=useRef(Date.now());
+  const[tab,setTab]=useState("dashboard");const[issues,setIssues]=useState(null);const[log,setLog]=useState({});const[plog,setPlog]=useState({});const[sprint,setSprint]=useState(false);const[limit,setLimit]=useState(30);const[sync,setSync]=useState("loading");const[vid,setVid]=useState(null);const[fc,_setFc]=useState(false);const fcR=useRef(false);const setFc=v=>{fcR.current=v;_setFc(v);};const[draft,setDraft]=useState({...EMPTY_DRAFT});const ss=useRef(Date.now());
 
-  const load=useCallback(async()=>{try{setSync("loading");const[iR,lR,sR,dR]=await Promise.all([supabase.from("issues").select("*"),supabase.from("study_log").select("*"),supabase.from("settings").select("*").eq("key","sprint_mode").maybeSingle(),supabase.from("settings").select("*").eq("key","daily_limit").maybeSingle()]);if(iR.error)throw iR.error;setIssues((iR.data||[]).map(db2i));const l={};(lR.data||[]).forEach(r=>{l[r.date]=r.minutes;});setLog(l);setSprint(sR.data?.value===true);if(dR.data?.value)setLimit(dR.data.value);setSync("synced");}catch(e){console.error(e);setSync("error");}},[]);
+  const load=useCallback(async()=>{try{setSync("loading");const[iR,lR,sR,dR,pR]=await Promise.all([supabase.from("issues").select("*"),supabase.from("study_log").select("*"),supabase.from("settings").select("*").eq("key","sprint_mode").maybeSingle(),supabase.from("settings").select("*").eq("key","daily_limit").maybeSingle(),supabase.from("practice_log").select("*")]);if(iR.error)throw iR.error;setIssues((iR.data||[]).map(db2i));const l={};(lR.data||[]).forEach(r=>{l[r.date]=r.minutes;});setLog(l);const pl={};(pR.data||[]).forEach(r=>{if(!pl[r.date])pl[r.date]={};pl[r.date][r.subject]={count:r.count,minutes:r.minutes};});setPlog(pl);setSprint(sR.data?.value===true);if(dR.data?.value)setLimit(dR.data.value);setSync("synced");}catch(e){console.error(e);setSync("error");}},[]);
 
-  useEffect(()=>{load();const ch=supabase.channel("sync").on("postgres_changes",{event:"*",schema:"public",table:"issues"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"study_log"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"settings"},()=>{if(!fcR.current)load();}).subscribe();ss.current=Date.now();return()=>{ch.unsubscribe();const el=Math.floor((Date.now()-ss.current)/60000);if(el>0)supabase.from("study_log").upsert({date:td(),minutes:(log[td()]||0)+el});};},[load]);
+  useEffect(()=>{load();const ch=supabase.channel("sync").on("postgres_changes",{event:"*",schema:"public",table:"issues"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"study_log"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"settings"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"practice_log"},()=>{if(!fcR.current)load();}).subscribe();ss.current=Date.now();return()=>{ch.unsubscribe();const el=Math.floor((Date.now()-ss.current)/60000);if(el>0)supabase.from("study_log").upsert({date:td(),minutes:(log[td()]||0)+el});};},[load]);
 
   const gDue=i=>{if(sprint&&i.stage<6){const d=new Date(i.lastReviewed||i.created);d.setDate(d.getDate()+2);return d.toISOString().split("T")[0];}return i.nextDate;};
   const isDue=i=>!i.mastered&&i.stage<6&&gDue(i)<=td();
@@ -188,6 +188,7 @@ export default function App(){
   async function del1(id){setIssues(a=>a.filter(i=>i.id!==id));if(vid===id)setVid(null);setSync("saving");await supabase.from("issues").delete().eq("id",id);setSync("synced");}
   async function togSp(){const n=!sprint;setSprint(n);await supabase.from("settings").upsert({key:"sprint_mode",value:n});}
   async function setLim(v){const val=Math.max(1,Math.min(200,v));setLimit(val);await supabase.from("settings").upsert({key:"daily_limit",value:val});}
+  async function savePractice(sub,cnt,mins){await supabase.from("practice_log").upsert({date:td(),subject:sub,count:parseInt(cnt)||0,minutes:parseInt(mins)||0},{onConflict:"date,subject"});}
 
   const openD=id=>setVid(id);
   const allTags=[...new Set((issues||[]).flatMap(i=>i.tags||[]))].sort();
@@ -216,7 +217,7 @@ export default function App(){
         {tab==="dashboard"&&<Dash issues={issues} due={todayDue} ovf={ovf} limit={limit} setLim={setLim} rate={rate} gDue={gDue} openD={openD} startFC={()=>setFc(true)}/>}
         {tab==="add"&&<AddP issues={issues} onAdd={addI} setTab={setTab} allTags={allTags} draft={draft} setDraft={setDraft}/>}
         {tab==="overview"&&<OvW issues={issues} rate={rate} isDue={isDue} editI={editI} delM={delM} del1={del1} allTags={allTags} openD={openD}/>}
-        {tab==="stats"&&<StatsP issues={issues} log={log}/>}
+        {tab==="stats"&&<StatsP issues={issues} log={log} plog={plog} savePractice={savePractice}/>}
       </div>
       {vi&&<Ov ch={<Det issue={vi} issues={issues} allTags={allTags} editI={editI} del1={del1} rate={rate} isDue={isDue} openD={openD} oc={()=>setVid(null)}/>} oc={()=>setVid(null)}/>}
     </div>
@@ -421,22 +422,81 @@ function Cd({i,issues,due,rate,editing,sEid,editI,dm,sel,tS,del1,allTags,openD})
 }
 
 // ═══ 統計 ═══
-function StatsP({issues,log}){
+function StatsP({issues,log,plog,savePractice}){
+  const today=td();
+  const[draft,setDraft]=useState(()=>{const d={};SUBJECTS.forEach(s=>{d[s]={count:"",minutes:""};});return d;});
+  const[saved,setSaved]=useState({});
+  useEffect(()=>{setDraft(d=>{const anyFilled=SUBJECTS.some(s=>d[s]?.count||d[s]?.minutes);if(anyFilled)return d;const n={};SUBJECTS.forEach(s=>{n[s]={count:plog[today]?.[s]?.count??'',minutes:plog[today]?.[s]?.minutes??''};});return n;});},[plog,today]);
+  async function handleBlur(sub){const{count,minutes}=draft[sub];await savePractice(sub,count,minutes);setSaved(p=>({...p,[sub]:true}));setTimeout(()=>setSaved(p=>({...p,[sub]:false})),1200);}
+
+  const days7=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d.toISOString().split("T")[0];});
+  const sub7=SUBJECTS.map(s=>({sub:s,total:days7.reduce((a,d)=>a+(plog[d]?.[s]?.count||0),0)}));
+  const max7=Math.max(...sub7.map(x=>x.total),1);
   const l30=Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-29+i);const k=d.toISOString().split("T")[0];return{date:k,mins:log[k]||0};});
   const mm=Math.max(...l30.map(d=>d.mins),1);
   const ec={};["完全忘記","要件不完整","與其他爭點混淆","其他"].forEach(r=>ec[r]=0);
   issues.forEach(i=>(i.errors||[]).forEach(e=>{if(ec[e.reason]!==undefined)ec[e.reason]++;}));
   const me=Math.max(...Object.values(ec),1);
   const cf=issues.map(i=>({...i,cc:(i.errors||[]).filter(e=>e.reason==="與其他爭點混淆").length})).filter(i=>i.cc>0).sort((a,b)=>b.cc-a.cc).slice(0,5);
-  return<div>
-    <Card title="各科複習進度" m={20}>{SUBJECTS.map(s=><SRow key={s} sub={s} iss={issues}/>)}</Card>
-    <Card title="每日複習時間（近 30 天）" m={20}>
+
+  const SL=({ch})=><div style={{fontSize:10,letterSpacing:1.5,color:C.mt,textTransform:"uppercase",padding:"20px 0 8px",borderBottom:`1px solid ${C.bd}`,marginBottom:14}}>{ch}</div>;
+  const inS={width:"100%",textAlign:"center",background:"transparent",border:"none",borderBottom:`1px solid ${C.bd}`,borderRadius:0,padding:"4px 0",fontSize:13,fontFamily:"monospace",color:C.tx,outline:"none"};
+
+  return<div style={{paddingBottom:8}}>
+    <SL ch="今日練習記錄"/>
+    <div style={{marginBottom:8}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 56px 56px 18px",gap:"0 8px",padding:"0 0 6px",marginBottom:4}}>
+        <span style={{fontSize:10,color:C.mt}}>科目</span>
+        <span style={{fontSize:10,color:C.mt,textAlign:"center"}}>題數</span>
+        <span style={{fontSize:10,color:C.mt,textAlign:"center"}}>分鐘</span>
+        <span/>
+      </div>
+      {SUBJECTS.map(s=><div key={s} style={{display:"grid",gridTemplateColumns:"1fr 56px 56px 18px",gap:"0 8px",alignItems:"center",padding:"6px 0",borderBottom:`1px solid ${C.bd}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:7}}>
+          <span style={{width:8,height:8,borderRadius:"50%",background:SUB_C[s],flexShrink:0,display:"inline-block"}}/>
+          <span style={{fontSize:13}}>{s}</span>
+        </div>
+        <input type="number" min="0" inputMode="numeric" value={draft[s]?.count??""} placeholder="—"
+          onChange={e=>setDraft(p=>({...p,[s]:{...p[s],count:e.target.value}}))}
+          onBlur={()=>handleBlur(s)} style={inS}/>
+        <input type="number" min="0" inputMode="numeric" value={draft[s]?.minutes??""} placeholder="—"
+          onChange={e=>setDraft(p=>({...p,[s]:{...p[s],minutes:e.target.value}}))}
+          onBlur={()=>handleBlur(s)} style={inS}/>
+        <span style={{fontSize:11,color:C.ok,opacity:saved[s]?1:0,transition:"opacity .3s",textAlign:"center"}}>✓</span>
+      </div>)}
+    </div>
+
+    <SL ch="近 7 日題數"/>
+    <div style={{marginBottom:8}}>
+      {sub7.every(x=>x.total===0)
+        ?<div style={{fontSize:12,color:C.mt,padding:"6px 0"}}>尚無資料</div>
+        :sub7.map(({sub,total})=><div key={sub} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+          <div style={{display:"flex",alignItems:"center",gap:5,width:66,flexShrink:0}}>
+            <span style={{width:7,height:7,borderRadius:"50%",background:SUB_C[sub],display:"inline-block",flexShrink:0}}/>
+            <span style={{fontSize:11,color:C.mt}}>{sub}</span>
+          </div>
+          <div style={{flex:1,height:5,background:C.bd,borderRadius:3,overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${total>0?Math.max(Math.round(total/max7*100),4):0}%`,background:SUB_C[sub],borderRadius:3,transition:"width .4s ease"}}/>
+          </div>
+          <span style={{fontSize:11,fontFamily:"monospace",color:total>0?C.tx:C.mt,width:28,textAlign:"right"}}>{total||"—"}</span>
+        </div>)
+      }
+    </div>
+
+    <SL ch="各科複習進度"/>
+    <div style={{marginBottom:8}}>{SUBJECTS.map(s=><SRow key={s} sub={s} iss={issues}/>)}</div>
+
+    <SL ch="每日複習時間（近 30 天）"/>
+    <div style={{marginBottom:8}}>
       <div style={{display:"flex",alignItems:"flex-end",gap:2,height:80}}>
-        {l30.map((d,i)=>{const h=Math.round(d.mins/mm*72);return<div key={i} title={`${d.date}: ${d.mins}分`} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",height:"100%"}}><div style={{width:"100%",height:h||2,background:d.date===td()?C.ac:C.am,borderRadius:2,minHeight:2}}/></div>;})}
+        {l30.map((d,i)=>{const h=Math.round(d.mins/mm*72);return<div key={i} title={`${d.date}: ${d.mins}分`} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",height:"100%"}}><div style={{width:"100%",height:h||2,background:d.date===today?C.ac:C.am,borderRadius:2,minHeight:2}}/></div>;})}
       </div>
       <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.mt,marginTop:6}}><span>30天前</span><span>今天</span></div>
-    </Card>
-    <Card title="失敗原因排行" m={20}>{Object.entries(ec).sort((a,b)=>b[1]-a[1]).map(([r,c])=><div key={r} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><span style={{width:120,fontSize:12,color:C.mt,flexShrink:0}}>{r}</span><div className="prog" style={{flex:1}}><div className="progf" style={{width:`${Math.round(c/me*100)}%`,background:C.dg}}/></div><span style={{fontSize:12,color:C.mt,width:24,textAlign:"right"}}>{c}</span></div>)}</Card>
-    {cf.length>0&&<Card title="高頻混淆爭點" m={20}>{cf.map(i=><div key={i.id} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.bd}`,fontSize:13}}><span>{i.name}<span style={{marginLeft:6}}><ST s={i.subject}/></span></span><span style={{color:C.dg,fontWeight:700}}>{i.cc} 次</span></div>)}</Card>}
+    </div>
+
+    <SL ch="失敗原因排行"/>
+    <div style={{marginBottom:8}}>{Object.entries(ec).sort((a,b)=>b[1]-a[1]).map(([r,c])=><div key={r} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><span style={{width:120,fontSize:12,color:C.mt,flexShrink:0}}>{r}</span><div className="prog" style={{flex:1}}><div className="progf" style={{width:`${Math.round(c/me*100)}%`,background:C.dg}}/></div><span style={{fontSize:12,color:C.mt,width:24,textAlign:"right"}}>{c}</span></div>)}</div>
+
+    {cf.length>0&&<><SL ch="高頻混淆爭點"/><div style={{marginBottom:8}}>{cf.map(i=><div key={i.id} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.bd}`,fontSize:13}}><span>{i.name}<span style={{marginLeft:6}}><ST s={i.subject}/></span></span><span style={{color:C.dg,fontWeight:700}}>{i.cc} 次</span></div>)}</div></>}
   </div>;
 }
