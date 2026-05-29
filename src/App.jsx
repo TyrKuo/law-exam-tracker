@@ -38,9 +38,9 @@ function rNotes(text,issues,onClick){
     const m=p.match(/^\[\[([^\]]+)\]\]$/);
     if(!m)return<span key={j}>{p}</span>;
     const f=issues.find(x=>x.name===m[1]);
-    return<span key={j} onClick={e=>{e.stopPropagation();f&&onClick?.(f.id);}} style={{color:"#818cf8",cursor:f?"pointer":"default",textDecoration:"underline",textDecorationStyle:"dotted",textUnderlineOffset:2}}>{m[1]}{!f&&<span style={{color:"#f87171",fontSize:9,marginLeft:2}}>?</span>}</span>;
+    return<span key={j} onClick={e=>{e.stopPropagation();f&&onClick?.(f.id);}} style={{color:"#818cf8",cursor:f?"pointer":"default",textDecoration:"underline",textDecorationStyle:"dotted",textUnderlineOffset:2}}>{m[1]}{!f&&<span style={{color:"#f87171",fontSize:11,marginLeft:2}}>?</span>}</span>;
   });
-  return<div style={{fontSize:13,color:"#eef0f8",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{parts}</div>;
+  return<div style={{fontSize:15,color:"#eef0f8",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{parts}</div>;
 }
 
 const C={bg:"#0d0d0d",sf:"#161616",cd:"#1f1f1f",bd:"#2e2e2e",tx:"#efefef",mt:"#7a7a7a",ac:"#d4d4d4",am:"#262626",dg:"#f87171",dm:"#2a1818",ok:"#4ade80",om:"#172215"};
@@ -62,11 +62,11 @@ button{cursor:pointer;border:none;border-radius:10px;font-size:13px;padding:8px 
 const ST=({s})=>{const c=SUB_C[s]||C.ac;return<span className="tag" style={{background:c+"18",color:c,border:`1px solid ${c}35`}}>{s}</span>;};
 const CT=({t})=>{const c=tcc(t);return<span className="tag" style={{background:c+"20",color:c,border:`1px solid ${c}45`,fontWeight:600}}>{t}</span>;};
 const SI=({v,oc,p})=><div className="sw"><input value={v} onChange={e=>oc(e.target.value)} placeholder={p||"搜尋…"}/>{v&&<button className="sc" onClick={()=>oc("")}>✕</button>}</div>;
-const Lb=({ch})=><div style={{fontSize:12,color:C.mt,marginBottom:6,fontWeight:600,letterSpacing:.3}}>{ch}</div>;
-const secT={fontSize:11,color:C.mt,fontWeight:600,marginBottom:12,textTransform:"uppercase",letterSpacing:.5};
+const Lb=({ch})=><div style={{fontSize:14,color:C.mt,marginBottom:6,fontWeight:600,letterSpacing:.3}}>{ch}</div>;
+const secT={fontSize:13,color:C.mt,fontWeight:600,marginBottom:12,textTransform:"uppercase",letterSpacing:.5};
 const Card=({title,children,m=14})=><div style={{marginBottom:m}}>{title&&<div style={secT}>{title}</div>}<div style={{background:C.cd,borderRadius:14,padding:16,border:`1px solid ${C.bd}`}}>{children}</div></div>;
 const Ov=({ch,oc})=><div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.8)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={oc}><div style={{background:C.cd,border:`1px solid ${C.bd}`,borderRadius:16,minWidth:300,maxWidth:560,width:"100%",maxHeight:"90vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>{ch}</div></div>;
-const RB=({onRate,sm})=><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:sm?5:8}}>{RATINGS.map(r=><button key={r.id} onClick={()=>onRate(r)} style={{background:r.color+"15",color:r.color,border:`1px solid ${r.color}35`,padding:sm?"8px 2px":"14px 4px",borderRadius:10,display:"flex",flexDirection:"column",alignItems:"center",gap:sm?2:5}}><span style={{fontSize:sm?16:22}}>{r.icon}</span><span style={{fontSize:sm?9:11,fontWeight:700}}>{r.label}</span>{!sm&&<span style={{fontSize:9,color:C.mt}}>{r.delta>0?"+":""}{r.delta}階</span>}</button>)}</div>;
+const RB=({onRate,sm})=><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:sm?5:8}}>{RATINGS.map(r=><button key={r.id} onClick={()=>onRate(r)} style={{background:r.color+"15",color:r.color,border:`1px solid ${r.color}35`,padding:sm?"8px 2px":"14px 4px",borderRadius:10,display:"flex",flexDirection:"column",alignItems:"center",gap:sm?2:5}}><span style={{fontSize:sm?16:22}}>{r.icon}</span><span style={{fontSize:sm?9:11,fontWeight:700}}>{r.label}</span>{!sm&&<span style={{fontSize:11,color:C.mt}}>{r.delta>0?"+":""}{r.delta}階</span>}</button>)}</div>;
 
 // 圓形進度環
 function Ring({pct,size=90,stroke=8,color,label,value}){
@@ -80,7 +80,7 @@ function Ring({pct,size=90,stroke=8,color,label,value}){
       <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="middle"
         fill={C.tx} fontSize={Math.round(size/5.5)} fontWeight={700} fontFamily="inherit">{value}</text>
     </svg>
-    <span style={{fontSize:10,color:C.mt,textAlign:"center"}}>{label}</span>
+    <span style={{fontSize:12,color:C.mt,textAlign:"center"}}>{label}</span>
   </div>;
 }
 
@@ -95,7 +95,7 @@ function WeekBar({issues}){
       </div>)}
     </div>
     <div style={{display:"flex",gap:6,padding:"5px 2px 0"}}>
-      {days.map(d=><div key={d.date} style={{flex:1,textAlign:"center",fontSize:9,color:d.date===today?C.ac:C.mt,fontWeight:d.date===today?700:400}}>{d.label}</div>)}
+      {days.map(d=><div key={d.date} style={{flex:1,textAlign:"center",fontSize:11,color:d.date===today?C.ac:C.mt,fontWeight:d.date===today?700:400}}>{d.label}</div>)}
     </div>
   </div>;
 }
@@ -105,9 +105,9 @@ function TI({tags,setTags,allTags}){
   const[inp,si]=useState("");const sg=inp.length>=1?allTags.filter(t=>t.includes(inp)&&!tags.includes(t)):[];
   const add=t=>{const tr=t.trim();if(tr&&!tags.includes(tr))setTags([...tags,tr]);si("");};
   return<div>
-    <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:6}}>{tags.map(t=><span key={t} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"3px 8px",borderRadius:6,fontSize:11,fontWeight:600,background:tcc(t)+"20",color:tcc(t),border:`1px solid ${tcc(t)}45`}}>{t}<span onClick={()=>setTags(tags.filter(x=>x!==t))} style={{marginLeft:2,cursor:"pointer",opacity:.7}}>✕</span></span>)}</div>
-    <div style={{display:"flex",gap:6}}><input value={inp} onChange={e=>si(e.target.value)} placeholder="輸入標籤" onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();add(inp);}}} style={{flex:1}}/><button onClick={()=>add(inp)} disabled={!inp.trim()} style={{background:C.ac,color:"#fff",padding:"8px 14px",flexShrink:0,fontSize:12,fontWeight:600}}>加入</button></div>
-    {sg.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>{sg.slice(0,8).map(t=><span key={t} onClick={()=>add(t)} style={{display:"inline-flex",padding:"3px 8px",borderRadius:6,fontSize:11,fontWeight:600,background:tcc(t)+"12",color:tcc(t),border:`1px solid ${tcc(t)}30`,cursor:"pointer"}}>+ {t}</span>)}</div>}
+    <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:6}}>{tags.map(t=><span key={t} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"3px 8px",borderRadius:6,fontSize:13,fontWeight:600,background:tcc(t)+"20",color:tcc(t),border:`1px solid ${tcc(t)}45`}}>{t}<span onClick={()=>setTags(tags.filter(x=>x!==t))} style={{marginLeft:2,cursor:"pointer",opacity:.7}}>✕</span></span>)}</div>
+    <div style={{display:"flex",gap:6}}><input value={inp} onChange={e=>si(e.target.value)} placeholder="輸入標籤" onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();add(inp);}}} style={{flex:1}}/><button onClick={()=>add(inp)} disabled={!inp.trim()} style={{background:C.ac,color:"#fff",padding:"8px 14px",flexShrink:0,fontSize:14,fontWeight:600}}>加入</button></div>
+    {sg.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:6}}>{sg.slice(0,8).map(t=><span key={t} onClick={()=>add(t)} style={{display:"inline-flex",padding:"3px 8px",borderRadius:6,fontSize:13,fontWeight:600,background:tcc(t)+"12",color:tcc(t),border:`1px solid ${tcc(t)}30`,cursor:"pointer"}}>+ {t}</span>)}</div>}
   </div>;
 }
 
@@ -135,7 +135,7 @@ function LinkTA({value,onChange,issues,placeholder}){
       onFocus={e=>{const pos=e.target.selectionStart;const before=value.slice(0,pos);const m=before.match(/\[\[([^\]]*)$/);if(m){setQuery(m[1]);setShowSug(true);}}}
     />
     {showSug&&sugs.length>0&&<div style={{position:"absolute",left:0,right:0,background:C.cd,border:`1px solid ${C.bd}`,borderRadius:10,zIndex:50,maxHeight:160,overflowY:"auto",boxShadow:"0 8px 24px rgba(0,0,0,.5)"}}>
-      {sugs.map(i=><div key={i.id} onMouseDown={()=>insertLink(i.name)} style={{padding:"9px 14px",cursor:"pointer",fontSize:13,borderBottom:`1px solid ${C.bd}`,display:"flex",alignItems:"center",gap:8}}><ST s={i.subject}/><span>{i.name}</span></div>)}
+      {sugs.map(i=><div key={i.id} onMouseDown={()=>insertLink(i.name)} style={{padding:"9px 14px",cursor:"pointer",fontSize:15,borderBottom:`1px solid ${C.bd}`,display:"flex",alignItems:"center",gap:8}}><ST s={i.subject}/><span>{i.name}</span></div>)}
     </div>}
   </div>;
 }
@@ -143,9 +143,9 @@ function LinkTA({value,onChange,issues,placeholder}){
 // 各科進度列
 const SRow=({sub,iss})=>{
   const s=subSt(iss,sub);const c=SUB_C[sub];
-  if(!s.total)return<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}><span style={{width:52,fontSize:12,color:c,fontWeight:600,flexShrink:0}}>{sub}</span><div className="prog" style={{flex:1}}/><span style={{fontSize:10,color:C.mt,width:70,textAlign:"right"}}>0 題</span></div>;
+  if(!s.total)return<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}><span style={{width:52,fontSize:14,color:c,fontWeight:600,flexShrink:0}}>{sub}</span><div className="prog" style={{flex:1}}/><span style={{fontSize:12,color:C.mt,width:70,textAlign:"right"}}>0 題</span></div>;
   const pc=s.avgPct>=70?"#34d399":s.avgPct>=40?"#fb923c":"#f87171";
-  return<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}><span style={{width:52,fontSize:12,color:c,fontWeight:600,flexShrink:0}}>{sub}</span><div className="prog" style={{flex:1}}><div className="progf" style={{width:`${s.avgPct}%`,background:pc}}/></div><span style={{fontSize:10,color:C.mt,width:90,textAlign:"right",flexShrink:0}}>{s.avgPct}% · {s.mastered}/{s.total}</span></div>;
+  return<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}><span style={{width:52,fontSize:14,color:c,fontWeight:600,flexShrink:0}}>{sub}</span><div className="prog" style={{flex:1}}><div className="progf" style={{width:`${s.avgPct}%`,background:pc}}/></div><span style={{fontSize:12,color:C.mt,width:90,textAlign:"right",flexShrink:0}}>{s.avgPct}% · {s.mastered}/{s.total}</span></div>;
 };
 
 // 編輯面板（通用）
@@ -163,8 +163,8 @@ function EP({issue,issues,allTags,editIssue,onDone}){
     <div style={{marginBottom:14}}><Lb ch="標籤"/><TI tags={tg} setTags={sTg} allTags={allTags}/></div>
     <div style={{marginBottom:14}}>
       <Lb ch="關聯爭點"/><SI v={rs} oc={sRs} p="搜尋爭點…"/>
-      {res.length>0&&<div style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:10,marginTop:6,maxHeight:140,overflowY:"auto"}}>{res.slice(0,5).map(i=><div key={i.id} onClick={()=>{sRl(r=>[...r,i.id]);sRs("");}} style={{padding:"9px 12px",cursor:"pointer",fontSize:13,borderBottom:`1px solid ${C.bd}`,display:"flex",alignItems:"center",gap:8}}><ST s={i.subject}/><span>{i.name}</span></div>)}</div>}
-      <div style={{display:"flex",flexWrap:"wrap",gap:5,marginTop:8}}>{rl.map(id=>{const i=issues.find(x=>x.id===id);if(!i)return null;return<span key={id} className="tag" style={{background:C.am,color:C.ac,fontSize:11}}>{i.name}<span onClick={()=>sRl(r=>r.filter(x=>x!==id))} style={{marginLeft:4,cursor:"pointer",opacity:.7}}>✕</span></span>;})}</div>
+      {res.length>0&&<div style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:10,marginTop:6,maxHeight:140,overflowY:"auto"}}>{res.slice(0,5).map(i=><div key={i.id} onClick={()=>{sRl(r=>[...r,i.id]);sRs("");}} style={{padding:"9px 12px",cursor:"pointer",fontSize:15,borderBottom:`1px solid ${C.bd}`,display:"flex",alignItems:"center",gap:8}}><ST s={i.subject}/><span>{i.name}</span></div>)}</div>}
+      <div style={{display:"flex",flexWrap:"wrap",gap:5,marginTop:8}}>{rl.map(id=>{const i=issues.find(x=>x.id===id);if(!i)return null;return<span key={id} className="tag" style={{background:C.am,color:C.ac,fontSize:13}}>{i.name}<span onClick={()=>sRl(r=>r.filter(x=>x!==id))} style={{marginLeft:4,cursor:"pointer",opacity:.7}}>✕</span></span>;})}</div>
     </div>
     <div style={{display:"flex",gap:8}}><button onClick={save} style={{flex:1,background:C.ac,color:"#fff",fontWeight:600,padding:11}}>儲存</button><button onClick={onDone} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,padding:11}}>取消</button></div>
   </div>;
@@ -194,7 +194,7 @@ export default function App(){
   const allTags=[...new Set((issues||[]).flatMap(i=>i.tags||[]))].sort();
   const vi=vid?(issues||[]).find(i=>i.id===vid):null;
 
-  if(!issues)return<><style>{css}</style><div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:20}}><div style={{fontSize:40}}>⚖️</div><div style={{fontWeight:700,fontSize:18}}>司法考試複習追蹤器</div><div className="spinner"/><div style={{fontSize:12,color:C.mt}}>{sync==="error"?"連線失敗":"連接中…"}</div>{sync==="error"&&<button onClick={load} style={{background:C.ac,color:"#fff",padding:"10px 24px",fontWeight:600}}>重試</button>}</div></>;
+  if(!issues)return<><style>{css}</style><div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:20}}><div style={{fontSize:40}}>⚖️</div><div style={{fontWeight:700,fontSize:18}}>司法考試複習追蹤器</div><div className="spinner"/><div style={{fontSize:14,color:C.mt}}>{sync==="error"?"連線失敗":"連接中…"}</div>{sync==="error"&&<button onClick={load} style={{background:C.ac,color:"#fff",padding:"10px 24px",fontWeight:600}}>重試</button>}</div></>;
 
   const allDue=pSort(issues.filter(isDue));const todayDue=allDue.slice(0,limit);const ovf=Math.max(0,allDue.length-limit);
   const scl=sync==="synced"?C.ok:sync==="error"?C.dg:"#fb923c";
@@ -205,12 +205,12 @@ export default function App(){
 
   return<><style>{css}</style>
     <div style={{minHeight:"100vh",background:C.bg,paddingBottom:68}}>
-      {sprint&&<div style={{background:C.dg,color:"#fff",textAlign:"center",padding:"7px 16px",fontWeight:600,fontSize:12}}>⚠ 考前衝刺模式：每 2 天強制複習</div>}
+      {sprint&&<div style={{background:C.dg,color:"#fff",textAlign:"center",padding:"7px 16px",fontWeight:600,fontSize:14}}>⚠ 考前衝刺模式：每 2 天強制複習</div>}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:C.sf,borderBottom:`1px solid ${C.bd}`,position:"sticky",top:0,zIndex:100}}>
-        <span style={{fontWeight:700,fontSize:15}}>⚖️ 司法考試複習</span>
+        <span style={{fontWeight:700,fontSize:17}}>⚖️ 司法考試複習</span>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <span style={{fontSize:10,color:scl}}>● {slb}</span>
-          <button onClick={togSp} style={{background:sprint?C.dg+"20":"transparent",color:sprint?C.dg:C.mt,border:`1px solid ${sprint?C.dg:C.bd}`,fontSize:11,padding:"5px 10px"}}>{sprint?"衝刺中":"衝刺模式"}</button>
+          <span style={{fontSize:12,color:scl}}>● {slb}</span>
+          <button onClick={togSp} style={{background:sprint?C.dg+"20":"transparent",color:sprint?C.dg:C.mt,border:`1px solid ${sprint?C.dg:C.bd}`,fontSize:13,padding:"5px 10px"}}>{sprint?"衝刺中":"衝刺模式"}</button>
         </div>
       </div>
       <div style={{padding:"16px 16px 0",maxWidth:680,margin:"0 auto"}}>
@@ -222,7 +222,7 @@ export default function App(){
       {vi&&<Ov ch={<Det issue={vi} issues={issues} allTags={allTags} editI={editI} del1={del1} rate={rate} isDue={isDue} openD={openD} oc={()=>setVid(null)}/>} oc={()=>setVid(null)}/>}
     </div>
     <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.sf,borderTop:`1px solid ${C.bd}`,display:"flex",zIndex:100}}>
-      {tabs.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"10px 4px 8px",background:"transparent",border:"none",borderRadius:0,color:tab===t.id?C.ac:C.mt,display:"flex",flexDirection:"column",alignItems:"center",gap:3,fontSize:10,fontWeight:tab===t.id?700:400,borderTop:`2px solid ${tab===t.id?C.ac:"transparent"}`,transition:"color .15s"}}><span style={{fontSize:18,lineHeight:1}}>{t.icon}</span>{t.l}</button>)}
+      {tabs.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"10px 4px 8px",background:"transparent",border:"none",borderRadius:0,color:tab===t.id?C.ac:C.mt,display:"flex",flexDirection:"column",alignItems:"center",gap:3,fontSize:12,fontWeight:tab===t.id?700:400,borderTop:`2px solid ${tab===t.id?C.ac:"transparent"}`,transition:"color .15s"}}><span style={{fontSize:18,lineHeight:1}}>{t.icon}</span>{t.l}</button>)}
     </div>
   </>;
 }
@@ -243,32 +243,32 @@ function FCM({issues,queue,rate,exit}){
     setTimeout(()=>{setFl(false);if(idx+1>=snapQueue.length)setDone(true);else setIdx(idx+1);setBusy(false);},300);
   }
 
-  if(!snapQueue.length)return<div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:20}}><div style={{fontSize:48}}>🎉</div><div style={{fontSize:20,fontWeight:700}}>今天沒有到期爭點！</div><button onClick={exit} style={{background:C.ac,color:"#fff",padding:"12px 32px",fontWeight:600,fontSize:15}}>返回</button></div>;
+  if(!snapQueue.length)return<div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,padding:20}}><div style={{fontSize:48}}>🎉</div><div style={{fontSize:20,fontWeight:700}}>今天沒有到期爭點！</div><button onClick={exit} style={{background:C.ac,color:"#fff",padding:"12px 32px",fontWeight:600,fontSize:17}}>返回</button></div>;
 
-  if(done){const ct={};RATINGS.forEach(r=>ct[r.id]=0);res.forEach(r=>ct[r.rating.id]++);return<div style={{minHeight:"100vh",background:C.bg,padding:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}><div style={{fontSize:48}}>📊</div><div style={{fontSize:20,fontWeight:700}}>完成！共 {res.length} 張</div><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,width:"100%",maxWidth:400}}>{RATINGS.map(r=><div key={r.id} style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:12,padding:14,textAlign:"center"}}><div style={{fontSize:24}}>{r.icon}</div><div style={{fontSize:11,color:r.color,fontWeight:700,marginTop:4}}>{r.label}</div><div style={{fontSize:26,fontWeight:700,marginTop:4}}>{ct[r.id]}</div></div>)}</div><div style={{fontSize:14,color:C.mt}}>總用時 <span style={{color:C.ok,fontFamily:"monospace",fontWeight:700}}>{fmt(elapsed)}</span></div><button onClick={exit} style={{background:C.ac,color:"#fff",padding:"12px 32px",fontWeight:600,fontSize:15,marginTop:8}}>返回首頁</button></div>;}
+  if(done){const ct={};RATINGS.forEach(r=>ct[r.id]=0);res.forEach(r=>ct[r.rating.id]++);return<div style={{minHeight:"100vh",background:C.bg,padding:20,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}><div style={{fontSize:48}}>📊</div><div style={{fontSize:20,fontWeight:700}}>完成！共 {res.length} 張</div><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,width:"100%",maxWidth:400}}>{RATINGS.map(r=><div key={r.id} style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:12,padding:14,textAlign:"center"}}><div style={{fontSize:24}}>{r.icon}</div><div style={{fontSize:13,color:r.color,fontWeight:700,marginTop:4}}>{r.label}</div><div style={{fontSize:26,fontWeight:700,marginTop:4}}>{ct[r.id]}</div></div>)}</div><div style={{fontSize:16,color:C.mt}}>總用時 <span style={{color:C.ok,fontFamily:"monospace",fontWeight:700}}>{fmt(elapsed)}</span></div><button onClick={exit} style={{background:C.ac,color:"#fff",padding:"12px 32px",fontWeight:600,fontSize:17,marginTop:8}}>返回首頁</button></div>;}
 
   return<div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 16px",background:C.sf,borderBottom:`1px solid ${C.bd}`}}>
-      <button onClick={exit} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:12,padding:"5px 12px"}}>✕ 退出</button>
-      <span style={{fontSize:13,color:C.mt,fontWeight:600}}>{idx+1} / {snapQueue.length}</span>
-      <span style={{fontSize:13,color:C.ok,fontFamily:"monospace",fontWeight:600}}>⏱ {fmt(elapsed)}</span>
+      <button onClick={exit} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:14,padding:"5px 12px"}}>✕ 退出</button>
+      <span style={{fontSize:15,color:C.mt,fontWeight:600}}>{idx+1} / {snapQueue.length}</span>
+      <span style={{fontSize:15,color:C.ok,fontFamily:"monospace",fontWeight:600}}>⏱ {fmt(elapsed)}</span>
       <div className="prog" style={{width:100}}><div className="progf" style={{width:`${idx/snapQueue.length*100}%`,background:C.ac}}/></div>
     </div>
     <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px 16px",maxWidth:600,margin:"0 auto",width:"100%"}}>
       <div style={{width:"100%",background:C.cd,border:`1px solid ${C.bd}`,borderRadius:16,padding:24,marginBottom:20}}>
-        <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}><ST s={cur.subject}/><span className="tag" style={{background:"transparent",color:DC[cur.difficulty],border:`1px solid ${DC[cur.difficulty]}`}}>{cur.difficulty}</span><span style={{fontSize:11,color:C.mt,marginLeft:"auto"}}>階段 {cur.stage}/6</span></div>
+        <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}><ST s={cur.subject}/><span className="tag" style={{background:"transparent",color:DC[cur.difficulty],border:`1px solid ${DC[cur.difficulty]}`}}>{cur.difficulty}</span><span style={{fontSize:13,color:C.mt,marginLeft:"auto"}}>階段 {cur.stage}/6</span></div>
         <div style={{fontSize:20,fontWeight:700,textAlign:"center",padding:"24px 0",lineHeight:1.5}}>{cur.name}</div>
         {(cur.tags||[]).length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:4,justifyContent:"center",marginTop:8}}>{cur.tags.map(t=><CT key={t} t={t}/>)}</div>}
       </div>
       {!fl
-        ?<button onClick={()=>setFl(true)} style={{background:C.ac,color:"#fff",padding:"14px 48px",fontSize:15,fontWeight:700,borderRadius:12}}>翻牌查看 ▼</button>
+        ?<button onClick={()=>setFl(true)} style={{background:C.ac,color:"#fff",padding:"14px 48px",fontSize:17,fontWeight:700,borderRadius:12}}>翻牌查看 ▼</button>
         :<div className="fi" style={{width:"100%"}}>
           <div style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:12,padding:20,marginBottom:20,maxHeight:"38vh",overflowY:"auto"}}>
-            {(cur.notes||"").trim()?rNotes(cur.notes,issues,null):<div style={{color:C.mt,textAlign:"center",padding:20,fontSize:14}}>（尚無筆記）</div>}
-            {rel.length>0&&<div style={{marginTop:12,paddingTop:10,borderTop:`1px solid ${C.bd}`}}><span style={{fontSize:11,color:C.mt}}>關聯：</span>{rel.map(r=><span key={r.id} className="tag" style={{marginLeft:4,background:C.am,color:C.ac,fontSize:11}}>{r.name}</span>)}</div>}
-            {bl.length>0&&<div style={{marginTop:8}}><span style={{fontSize:11,color:C.mt}}>被提及：</span>{bl.map(r=><span key={r.id} className="tag" style={{marginLeft:4,background:C.sf,color:C.mt,fontSize:11,border:`1px solid ${C.bd}`}}>{r.name}</span>)}</div>}
+            {(cur.notes||"").trim()?rNotes(cur.notes,issues,null):<div style={{color:C.mt,textAlign:"center",padding:20,fontSize:16}}>（尚無筆記）</div>}
+            {rel.length>0&&<div style={{marginTop:12,paddingTop:10,borderTop:`1px solid ${C.bd}`}}><span style={{fontSize:13,color:C.mt}}>關聯：</span>{rel.map(r=><span key={r.id} className="tag" style={{marginLeft:4,background:C.am,color:C.ac,fontSize:13}}>{r.name}</span>)}</div>}
+            {bl.length>0&&<div style={{marginTop:8}}><span style={{fontSize:13,color:C.mt}}>被提及：</span>{bl.map(r=><span key={r.id} className="tag" style={{marginLeft:4,background:C.sf,color:C.mt,fontSize:13,border:`1px solid ${C.bd}`}}>{r.name}</span>)}</div>}
           </div>
-          <div style={{fontSize:12,color:C.mt,textAlign:"center",marginBottom:12}}>你記得多少？</div>
+          <div style={{fontSize:14,color:C.mt,textAlign:"center",marginBottom:12}}>你記得多少？</div>
           <RB onRate={go}/>
         </div>}
     </div>
@@ -284,17 +284,17 @@ function Det({issue:is,issues,allTags,editI,del1,rate,isDue,openD,oc}){
       <div><div style={{fontWeight:700,fontSize:17,marginBottom:8,lineHeight:1.4}}>{is.name}</div>
         <div style={{display:"flex",flexWrap:"wrap",gap:5}}><ST s={is.subject}/><span className="tag" style={{background:"transparent",color:DC[is.difficulty],border:`1px solid ${DC[is.difficulty]}`}}>{is.difficulty}</span>{is.mastered&&<span className="tag" style={{background:C.om,color:C.ok}}>已掌握</span>}{due&&!is.mastered&&<span className="tag" style={{background:C.dm,color:C.dg}}>今日到期</span>}</div>
       </div>
-      <div style={{display:"flex",gap:5}}>{!ed&&<button onClick={()=>sEd(true)} style={{background:C.am,color:C.ac,fontSize:12,padding:"5px 12px"}}>編輯</button>}<button onClick={oc} style={{background:"transparent",color:C.mt,fontSize:20,padding:"2px 8px",border:"none",lineHeight:1}}>✕</button></div>
+      <div style={{display:"flex",gap:5}}>{!ed&&<button onClick={()=>sEd(true)} style={{background:C.am,color:C.ac,fontSize:14,padding:"5px 12px"}}>編輯</button>}<button onClick={oc} style={{background:"transparent",color:C.mt,fontSize:20,padding:"2px 8px",border:"none",lineHeight:1}}>✕</button></div>
     </div>
     {!ed?<>
       {(is.tags||[]).length>0&&<div style={{marginBottom:12,display:"flex",flexWrap:"wrap",gap:4}}>{is.tags.map(t=><CT key={t} t={t}/>)}</div>}
-      <div style={{marginBottom:14}}><div style={{display:"flex",gap:3,marginBottom:6}}>{itv.map((_,i)=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<is.stage?C.ac:C.bd}}/>)}</div><div style={{fontSize:12,color:C.mt}}>階段 {Math.min(is.stage,6)}/6{!is.mastered&&is.nextDate&&` · 下次：${is.nextDate}（${ddf(is.nextDate)===0?"今天":ddf(is.nextDate)>0?`${ddf(is.nextDate)}天後`:`逾期${-ddf(is.nextDate)}天`}）`}</div></div>
-      {(is.notes||"").trim()&&<div style={{marginBottom:14}}><div style={{fontSize:12,color:C.mt,fontWeight:600,marginBottom:6}}>筆記</div><div style={{background:C.sf,borderRadius:10,padding:"12px 14px"}}>{rNotes(is.notes,issues,openD)}</div></div>}
-      {rel.length>0&&<div style={{marginBottom:14}}><div style={{fontSize:12,color:C.mt,fontWeight:600,marginBottom:6}}>關聯爭點</div><div style={{display:"flex",flexDirection:"column",gap:6}}>{rel.map(r=><div key={r.id} onClick={()=>openD(r.id)} style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:10,padding:"10px 14px",cursor:"pointer",fontSize:13}}><ST s={r.subject}/><span style={{marginLeft:6,fontWeight:500}}>{r.name}</span>{(r.notes||"").trim()&&<div style={{marginTop:4,fontSize:11,color:C.mt,maxHeight:36,overflow:"hidden"}}>{r.notes.slice(0,80)}{r.notes.length>80?"…":""}</div>}</div>)}</div></div>}
-      {bl.length>0&&<div style={{marginBottom:14}}><div style={{fontSize:12,color:C.mt,fontWeight:600,marginBottom:6}}>被提及（反向連結）</div><div style={{display:"flex",flexWrap:"wrap",gap:5}}>{bl.map(r=><span key={r.id} onClick={()=>openD(r.id)} className="tag" style={{background:C.sf,color:C.ac,cursor:"pointer",padding:"5px 12px",fontSize:12,border:`1px solid ${C.bd}`}}>{r.name}</span>)}</div></div>}
-      {(is.errors||[]).length>0&&<div style={{marginBottom:14}}><div style={{fontSize:12,color:C.mt,fontWeight:600,marginBottom:6}}>錯誤紀錄</div><div style={{background:C.sf,borderRadius:10,padding:"10px 12px"}}>{is.errors.map((e,i)=><div key={i} style={{fontSize:12,color:C.dg,marginBottom:2}}>{e.date} · {e.reason}</div>)}</div></div>}
-      {due&&!is.mastered&&<div style={{marginBottom:14}}><div style={{fontSize:12,color:C.mt,textAlign:"center",marginBottom:10}}>你記得多少？</div><RB onRate={async r=>{await rate(is,r);oc();}}/></div>}
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:10,borderTop:`1px solid ${C.bd}`}}><div style={{fontSize:11,color:C.mt}}>建立：{is.created}</div>{!cd?<button onClick={()=>sCd(true)} style={{background:"transparent",color:C.dg,border:`1px solid ${C.dg}`,fontSize:11,padding:"5px 12px"}}>刪除</button>:<div style={{display:"flex",gap:5}}><button onClick={()=>{del1(is.id);oc();}} style={{background:C.dg,color:"#fff",fontSize:11,padding:"5px 12px",fontWeight:600}}>確認刪除</button><button onClick={()=>sCd(false)} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:11,padding:"5px 10px"}}>取消</button></div>}</div>
+      <div style={{marginBottom:14}}><div style={{display:"flex",gap:3,marginBottom:6}}>{itv.map((_,i)=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<is.stage?C.ac:C.bd}}/>)}</div><div style={{fontSize:14,color:C.mt}}>階段 {Math.min(is.stage,6)}/6{!is.mastered&&is.nextDate&&` · 下次：${is.nextDate}（${ddf(is.nextDate)===0?"今天":ddf(is.nextDate)>0?`${ddf(is.nextDate)}天後`:`逾期${-ddf(is.nextDate)}天`}）`}</div></div>
+      {(is.notes||"").trim()&&<div style={{marginBottom:14}}><div style={{fontSize:14,color:C.mt,fontWeight:600,marginBottom:6}}>筆記</div><div style={{background:C.sf,borderRadius:10,padding:"12px 14px"}}>{rNotes(is.notes,issues,openD)}</div></div>}
+      {rel.length>0&&<div style={{marginBottom:14}}><div style={{fontSize:14,color:C.mt,fontWeight:600,marginBottom:6}}>關聯爭點</div><div style={{display:"flex",flexDirection:"column",gap:6}}>{rel.map(r=><div key={r.id} onClick={()=>openD(r.id)} style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:10,padding:"10px 14px",cursor:"pointer",fontSize:15}}><ST s={r.subject}/><span style={{marginLeft:6,fontWeight:500}}>{r.name}</span>{(r.notes||"").trim()&&<div style={{marginTop:4,fontSize:13,color:C.mt,maxHeight:36,overflow:"hidden"}}>{r.notes.slice(0,80)}{r.notes.length>80?"…":""}</div>}</div>)}</div></div>}
+      {bl.length>0&&<div style={{marginBottom:14}}><div style={{fontSize:14,color:C.mt,fontWeight:600,marginBottom:6}}>被提及（反向連結）</div><div style={{display:"flex",flexWrap:"wrap",gap:5}}>{bl.map(r=><span key={r.id} onClick={()=>openD(r.id)} className="tag" style={{background:C.sf,color:C.ac,cursor:"pointer",padding:"5px 12px",fontSize:14,border:`1px solid ${C.bd}`}}>{r.name}</span>)}</div></div>}
+      {(is.errors||[]).length>0&&<div style={{marginBottom:14}}><div style={{fontSize:14,color:C.mt,fontWeight:600,marginBottom:6}}>錯誤紀錄</div><div style={{background:C.sf,borderRadius:10,padding:"10px 12px"}}>{is.errors.map((e,i)=><div key={i} style={{fontSize:14,color:C.dg,marginBottom:2}}>{e.date} · {e.reason}</div>)}</div></div>}
+      {due&&!is.mastered&&<div style={{marginBottom:14}}><div style={{fontSize:14,color:C.mt,textAlign:"center",marginBottom:10}}>你記得多少？</div><RB onRate={async r=>{await rate(is,r);oc();}}/></div>}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:10,borderTop:`1px solid ${C.bd}`}}><div style={{fontSize:13,color:C.mt}}>建立：{is.created}</div>{!cd?<button onClick={()=>sCd(true)} style={{background:"transparent",color:C.dg,border:`1px solid ${C.dg}`,fontSize:13,padding:"5px 12px"}}>刪除</button>:<div style={{display:"flex",gap:5}}><button onClick={()=>{del1(is.id);oc();}} style={{background:C.dg,color:"#fff",fontSize:13,padding:"5px 12px",fontWeight:600}}>確認刪除</button><button onClick={()=>sCd(false)} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:13,padding:"5px 10px"}}>取消</button></div>}</div>
     </>:<EP issue={is} issues={issues} allTags={allTags} editIssue={editI} onDone={()=>sEd(false)}/>}
   </div>;
 }
@@ -314,22 +314,22 @@ function Dash({issues,due,ovf,limit,setLim,rate,gDue,openD,startFC}){
       <Ring pct={Math.min(due.length/Math.max(limit,1)*100,100)} color={due.length>0?"#fb923c":C.ok} label="今日待複習" value={due.length} size={88}/>
     </div>
     {due.length>0
-      ?<button onClick={startFC} style={{width:"100%",background:`linear-gradient(135deg,${C.ac},#8b5cf6)`,color:"#fff",padding:14,fontSize:15,fontWeight:700,borderRadius:14,marginBottom:14,border:"none"}}>🃏 開始閃卡複習 · {due.length} 張</button>
-      :<div style={{textAlign:"center",padding:"12px 16px",background:C.om,borderRadius:12,marginBottom:14,color:C.ok,fontSize:14,fontWeight:600}}>✓ 今日複習完成！</div>}
+      ?<button onClick={startFC} style={{width:"100%",background:`linear-gradient(135deg,${C.ac},#8b5cf6)`,color:"#fff",padding:14,fontSize:17,fontWeight:700,borderRadius:14,marginBottom:14,border:"none"}}>🃏 開始閃卡複習 · {due.length} 張</button>
+      :<div style={{textAlign:"center",padding:"12px 16px",background:C.om,borderRadius:12,marginBottom:14,color:C.ok,fontSize:16,fontWeight:600}}>✓ 今日複習完成！</div>}
     <Card title="本週複習"><WeekBar issues={issues}/></Card>
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,padding:"10px 14px",background:C.sf,borderRadius:12,border:`1px solid ${C.bd}`,flexWrap:"wrap"}}>
-      <span style={{fontSize:12,color:C.mt}}>每日上限：</span>
-      {!el?<><span style={{fontSize:14,fontWeight:700}}>{limit} 題</span>{ovf>0&&<span style={{fontSize:11,color:C.dg}}>（{ovf} 題延後）</span>}<button onClick={()=>{sTmp(limit);sEl(true);}} style={{background:"transparent",color:C.ac,border:`1px solid ${C.ac}`,fontSize:11,padding:"3px 10px",marginLeft:"auto"}}>調整</button></>
-        :<><input type="number" value={tmp} onChange={e=>sTmp(Number(e.target.value))} min={1} max={200} style={{width:64,textAlign:"center",padding:"4px 6px",fontSize:14}}/><button onClick={()=>{setLim(tmp);sEl(false);}} style={{background:C.ac,color:"#fff",fontSize:11,padding:"5px 12px",fontWeight:600}}>確認</button><button onClick={()=>sEl(false)} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:11,padding:"5px 10px"}}>取消</button></>}
+      <span style={{fontSize:14,color:C.mt}}>每日上限：</span>
+      {!el?<><span style={{fontSize:16,fontWeight:700}}>{limit} 題</span>{ovf>0&&<span style={{fontSize:13,color:C.dg}}>（{ovf} 題延後）</span>}<button onClick={()=>{sTmp(limit);sEl(true);}} style={{background:"transparent",color:C.ac,border:`1px solid ${C.ac}`,fontSize:13,padding:"3px 10px",marginLeft:"auto"}}>調整</button></>
+        :<><input type="number" value={tmp} onChange={e=>sTmp(Number(e.target.value))} min={1} max={200} style={{width:64,textAlign:"center",padding:"4px 6px",fontSize:16}}/><button onClick={()=>{setLim(tmp);sEl(false);}} style={{background:C.ac,color:"#fff",fontSize:13,padding:"5px 12px",fontWeight:600}}>確認</button><button onClick={()=>sEl(false)} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:13,padding:"5px 10px"}}>取消</button></>}
     </div>
     <Card title="各科進度">{SUBJECTS.map(s=><SRow key={s} sub={s} iss={issues}/>)}</Card>
     {Object.keys(gr).length>0&&<div style={{marginBottom:14}}>
       <div style={secT}>今日複習（{due.length}）</div>
-      {Object.entries(gr).map(([s,l])=><div key={s} style={{marginBottom:14}}><div style={{fontSize:12,fontWeight:700,color:SUB_C[s],marginBottom:6}}>{s}</div><div style={{display:"flex",flexDirection:"column",gap:6}}>{l.map(i=><Row key={i.id} i={i} rate={rate} openD={openD}/>)}</div></div>)}
+      {Object.entries(gr).map(([s,l])=><div key={s} style={{marginBottom:14}}><div style={{fontSize:14,fontWeight:700,color:SUB_C[s],marginBottom:6}}>{s}</div><div style={{display:"flex",flexDirection:"column",gap:6}}>{l.map(i=><Row key={i.id} i={i} rate={rate} openD={openD}/>)}</div></div>)}
     </div>}
     {up.length>0&&<div style={{marginBottom:14}}>
       <div style={secT}>未來 7 天到期</div>
-      <div style={{display:"flex",flexDirection:"column",gap:6}}>{up.map(i=>{const d=ddf(gDue(i));return<div key={i.id} onClick={()=>openD(i.id)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:C.sf,border:`1px solid ${C.bd}`,borderRadius:10,cursor:"pointer"}}><span style={{fontSize:13,fontWeight:500}}>{i.name}</span><div style={{display:"flex",gap:6,alignItems:"center"}}><ST s={i.subject}/><span style={{fontSize:11,color:C.mt,flexShrink:0}}>{d}天後</span></div></div>;})}</div>
+      <div style={{display:"flex",flexDirection:"column",gap:6}}>{up.map(i=>{const d=ddf(gDue(i));return<div key={i.id} onClick={()=>openD(i.id)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:C.sf,border:`1px solid ${C.bd}`,borderRadius:10,cursor:"pointer"}}><span style={{fontSize:15,fontWeight:500}}>{i.name}</span><div style={{display:"flex",gap:6,alignItems:"center"}}><ST s={i.subject}/><span style={{fontSize:13,color:C.mt,flexShrink:0}}>{d}天後</span></div></div>;})}</div>
     </div>}
   </div>;
 }
@@ -338,8 +338,8 @@ function Row({i,rate,openD}){
   const[sr,sSr]=useState(false);
   return<div style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:10}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",gap:8,flexWrap:"wrap"}}>
-      <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>openD(i.id)}><span style={{fontSize:13,fontWeight:600}}>{i.name}</span><span style={{marginLeft:6}}><ST s={i.subject}/></span><span className="tag" style={{marginLeft:4,background:"transparent",color:DC[i.difficulty],border:`1px solid ${DC[i.difficulty]}`,fontSize:10}}>{i.difficulty}</span>{(i.tags||[]).length>0&&<span style={{marginLeft:5,fontSize:10,color:tcc(i.tags[0])}}>🏷{i.tags.length}</span>}{(i.notes||"").trim()&&<span style={{marginLeft:5,fontSize:10,color:C.mt}}>📝</span>}</div>
-      <button onClick={e=>{e.stopPropagation();sSr(!sr);}} style={{background:C.am,color:C.ac,fontSize:11,padding:"6px 12px",flexShrink:0,fontWeight:600}}>{sr?"收起":"評分"}</button>
+      <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>openD(i.id)}><span style={{fontSize:15,fontWeight:600}}>{i.name}</span><span style={{marginLeft:6}}><ST s={i.subject}/></span><span className="tag" style={{marginLeft:4,background:"transparent",color:DC[i.difficulty],border:`1px solid ${DC[i.difficulty]}`,fontSize:12}}>{i.difficulty}</span>{(i.tags||[]).length>0&&<span style={{marginLeft:5,fontSize:12,color:tcc(i.tags[0])}}>🏷{i.tags.length}</span>}{(i.notes||"").trim()&&<span style={{marginLeft:5,fontSize:12,color:C.mt}}>📝</span>}</div>
+      <button onClick={e=>{e.stopPropagation();sSr(!sr);}} style={{background:C.am,color:C.ac,fontSize:13,padding:"6px 12px",flexShrink:0,fontWeight:600}}>{sr?"收起":"評分"}</button>
     </div>
     {sr&&<div style={{padding:"0 14px 12px"}}><RB onRate={async r=>{await rate(i,r);sSr(false);}} sm/></div>}
   </div>;
@@ -363,11 +363,11 @@ function AddP({issues,onAdd,setTab,allTags,draft,setDraft}){
       <div><Lb ch="標籤"/><TI tags={tags} setTags={v=>up("tags",v)} allTags={allTags}/></div>
       <div>
         <Lb ch="關聯爭點"/><SI v={search} oc={v=>up("search",v)} p="搜尋現有爭點…"/>
-        {res.length>0&&<div style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:10,marginTop:6,maxHeight:160,overflowY:"auto"}}>{res.slice(0,8).map(i=><div key={i.id} onClick={()=>{up("related",[...related,i.id]);up("search","");}} style={{padding:"9px 14px",cursor:"pointer",borderBottom:`1px solid ${C.bd}`,fontSize:13,display:"flex",alignItems:"center",gap:8}}><ST s={i.subject}/><span>{i.name}</span></div>)}</div>}
+        {res.length>0&&<div style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:10,marginTop:6,maxHeight:160,overflowY:"auto"}}>{res.slice(0,8).map(i=><div key={i.id} onClick={()=>{up("related",[...related,i.id]);up("search","");}} style={{padding:"9px 14px",cursor:"pointer",borderBottom:`1px solid ${C.bd}`,fontSize:15,display:"flex",alignItems:"center",gap:8}}><ST s={i.subject}/><span>{i.name}</span></div>)}</div>}
         <div style={{display:"flex",flexWrap:"wrap",gap:5,marginTop:8}}>{related.map(id=>{const i=issues.find(x=>x.id===id);if(!i)return null;return<span key={id} className="tag" style={{background:C.am,color:C.ac,padding:"4px 10px"}}>{i.name}<span onClick={()=>up("related",related.filter(x=>x!==id))} style={{marginLeft:5,cursor:"pointer",opacity:.7}}>✕</span></span>;})}</div>
       </div>
-      <div style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:10,padding:"12px 14px",fontSize:12,color:C.mt}}>第一次複習日：<strong style={{color:C.tx}}>{cNext(td(),0,difficulty)}（{difficulty==="高"?"1":"3"} 天後）</strong><br/>間隔：{gitv(difficulty).join(" → ")} 天</div>
-      <button onClick={submit} disabled={!name.trim()} style={{background:C.ac,color:"#fff",padding:13,fontWeight:700,fontSize:15,borderRadius:12}}>新增爭點</button>
+      <div style={{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:10,padding:"12px 14px",fontSize:14,color:C.mt}}>第一次複習日：<strong style={{color:C.tx}}>{cNext(td(),0,difficulty)}（{difficulty==="高"?"1":"3"} 天後）</strong><br/>間隔：{gitv(difficulty).join(" → ")} 天</div>
+      <button onClick={submit} disabled={!name.trim()} style={{background:C.ac,color:"#fff",padding:13,fontWeight:700,fontSize:17,borderRadius:12}}>新增爭點</button>
     </div>
   </div>;
 }
@@ -385,13 +385,13 @@ function OvW({issues,rate,isDue,editI,delM,del1,allTags,openD}){
         <select value={stf} onChange={e=>sStf(e.target.value)} style={{width:"auto",borderRadius:8,padding:"6px 10px"}}>{["全部","今日待複習","進行中","已掌握"].map(x=><option key={x}>{x}</option>)}</select>
         {allTags.length>0&&<select value={tf} onChange={e=>sTf(e.target.value)} style={{width:"auto",borderRadius:8,padding:"6px 10px"}}><option>全部</option>{allTags.map(t=><option key={t}>{t}</option>)}</select>}
         <select value={sb} onChange={e=>sSb(e.target.value)} style={{width:"auto",borderRadius:8,padding:"6px 10px"}}>{SORTS.map(o=><option key={o.id} value={o.id}>{o.l}</option>)}</select>
-        <span style={{fontSize:12,color:C.mt}}>共 {f.length} 筆</span>
-        <div style={{marginLeft:"auto"}}>{!dm?<button onClick={()=>sDm(true)} style={{background:"transparent",color:C.dg,border:`1px solid ${C.dg}`,fontSize:12,padding:"6px 12px"}}>批量刪除</button>:<div style={{display:"flex",gap:6,alignItems:"center"}}><button onClick={()=>sel.size===f.length?sSel(new Set()):sSel(new Set(f.map(i=>i.id)))} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:12,padding:"6px 10px"}}>{sel.size===f.length?"取消全選":"全選"}</button><button onClick={()=>{delM([...sel]);sSel(new Set());sDm(false);}} disabled={!sel.size} style={{background:C.dg,color:"#fff",fontSize:12,padding:"6px 12px",fontWeight:600}}>刪除{sel.size?` (${sel.size})`:""}</button><button onClick={()=>{sSel(new Set());sDm(false);}} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:12,padding:"6px 10px"}}>取消</button></div>}</div>
+        <span style={{fontSize:14,color:C.mt}}>共 {f.length} 筆</span>
+        <div style={{marginLeft:"auto"}}>{!dm?<button onClick={()=>sDm(true)} style={{background:"transparent",color:C.dg,border:`1px solid ${C.dg}`,fontSize:14,padding:"6px 12px"}}>批量刪除</button>:<div style={{display:"flex",gap:6,alignItems:"center"}}><button onClick={()=>sel.size===f.length?sSel(new Set()):sSel(new Set(f.map(i=>i.id)))} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:14,padding:"6px 10px"}}>{sel.size===f.length?"取消全選":"全選"}</button><button onClick={()=>{delM([...sel]);sSel(new Set());sDm(false);}} disabled={!sel.size} style={{background:C.dg,color:"#fff",fontSize:14,padding:"6px 12px",fontWeight:600}}>刪除{sel.size?` (${sel.size})`:""}</button><button onClick={()=>{sSel(new Set());sDm(false);}} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:14,padding:"6px 10px"}}>取消</button></div>}</div>
       </div>
     </div>
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {f.map(i=><Cd key={i.id} i={i} issues={issues} due={isDue(i)} rate={rate} editing={eid===i.id} sEid={sEid} editI={editI} dm={dm} sel={sel.has(i.id)} tS={()=>tS(i.id)} del1={del1} allTags={allTags} openD={openD}/>)}
-      {!f.length&&<div style={{color:C.mt,textAlign:"center",padding:48,fontSize:14}}>沒有符合條件的爭點</div>}
+      {!f.length&&<div style={{color:C.mt,textAlign:"center",padding:48,fontSize:16}}>沒有符合條件的爭點</div>}
     </div>
   </div>;
 }
@@ -401,21 +401,21 @@ function Cd({i,issues,due,rate,editing,sEid,editI,dm,sel,tS,del1,allTags,openD})
   const itv=gitv(i.difficulty);const rel=gRel(i,issues);const bl=gBack(i,issues);
   return<div style={{background:sel?C.dm:C.cd,border:`1px solid ${sel?C.dg:due?C.dg+"80":C.bd}`,borderRadius:12,padding:"14px 16px"}}>
     <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
-      {dm&&<div onClick={tS} className={`cb${sel?" ck":""}`} style={{marginTop:2}}>{sel&&<span style={{color:"#fff",fontSize:11,fontWeight:700}}>✓</span>}</div>}
+      {dm&&<div onClick={tS} className={`cb${sel?" ck":""}`} style={{marginTop:2}}>{sel&&<span style={{color:"#fff",fontSize:13,fontWeight:700}}>✓</span>}</div>}
       <div style={{flex:1,minWidth:0}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6,marginBottom:10}}>
-          <div><span style={{fontWeight:700,fontSize:14}}>{i.name}</span><span style={{marginLeft:6}}><ST s={i.subject}/></span><span className="tag" style={{marginLeft:4,background:"transparent",color:DC[i.difficulty],border:`1px solid ${DC[i.difficulty]}`,fontSize:10}}>{i.difficulty}</span>{i.mastered&&<span className="tag" style={{marginLeft:4,background:C.om,color:C.ok}}>已掌握</span>}{due&&!i.mastered&&<span className="tag" style={{marginLeft:4,background:C.dm,color:C.dg}}>今日到期</span>}</div>
-          {!dm&&<div style={{display:"flex",gap:5}}><button onClick={()=>editing?sEid(null):sEid(i.id)} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:11,padding:"4px 10px"}}>編輯</button><button onClick={()=>sCd(true)} style={{background:"transparent",color:C.dg,border:`1px solid ${C.dg}`,fontSize:11,padding:"4px 10px"}}>刪除</button></div>}
+          <div><span style={{fontWeight:700,fontSize:16}}>{i.name}</span><span style={{marginLeft:6}}><ST s={i.subject}/></span><span className="tag" style={{marginLeft:4,background:"transparent",color:DC[i.difficulty],border:`1px solid ${DC[i.difficulty]}`,fontSize:12}}>{i.difficulty}</span>{i.mastered&&<span className="tag" style={{marginLeft:4,background:C.om,color:C.ok}}>已掌握</span>}{due&&!i.mastered&&<span className="tag" style={{marginLeft:4,background:C.dm,color:C.dg}}>今日到期</span>}</div>
+          {!dm&&<div style={{display:"flex",gap:5}}><button onClick={()=>editing?sEid(null):sEid(i.id)} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:13,padding:"4px 10px"}}>編輯</button><button onClick={()=>sCd(true)} style={{background:"transparent",color:C.dg,border:`1px solid ${C.dg}`,fontSize:13,padding:"4px 10px"}}>刪除</button></div>}
         </div>
         {(i.tags||[]).length>0&&<div style={{marginBottom:8,display:"flex",flexWrap:"wrap",gap:4}}>{i.tags.map(t=><CT key={t} t={t}/>)}</div>}
-        <div style={{marginBottom:10}}><div style={{display:"flex",gap:3,marginBottom:5}}>{itv.map((_,x)=><div key={x} style={{flex:1,height:4,borderRadius:2,background:x<i.stage?C.ac:C.bd}}/>)}</div><div style={{fontSize:11,color:C.mt}}>階段 {Math.min(i.stage,6)}/6{!i.mastered&&i.nextDate&&` · 下次：${i.nextDate}（${ddf(i.nextDate)===0?"今天":ddf(i.nextDate)>0?`${ddf(i.nextDate)}天後`:`逾期${-ddf(i.nextDate)}天`}）`}</div></div>
-        {(i.notes||"").trim()&&<div style={{marginBottom:8}}><span onClick={()=>sSn(!sn)} style={{fontSize:11,color:C.ac,cursor:"pointer",fontWeight:600}}>{sn?"▼ 收起筆記":"▶ 查看筆記"}</span>{sn&&<div style={{marginTop:6,background:C.sf,borderRadius:8,padding:"10px 12px"}}>{rNotes(i.notes,issues,openD)}</div>}</div>}
-        {rel.length>0&&<div style={{marginBottom:7}}><span style={{fontSize:11,color:C.mt}}>關聯：</span>{rel.map(r=><span key={r.id} className="tag" style={{marginLeft:4,background:C.am,color:C.ac,fontSize:11}}>{r.name}</span>)}</div>}
-        {bl.length>0&&<div style={{marginBottom:7}}><span style={{fontSize:11,color:C.mt}}>被提及：</span>{bl.map(r=><span key={r.id} className="tag" style={{marginLeft:4,background:C.sf,color:C.mt,fontSize:11,border:`1px solid ${C.bd}`}}>{r.name}</span>)}</div>}
-        {(i.errors||[]).length>0&&<div style={{marginBottom:8,background:C.sf,borderRadius:8,padding:"8px 10px"}}><div style={{fontSize:10,color:C.mt,marginBottom:3}}>錯誤紀錄</div>{i.errors.map((e,x)=><div key={x} style={{fontSize:11,color:C.dg}}>{e.date} · {e.reason}</div>)}</div>}
+        <div style={{marginBottom:10}}><div style={{display:"flex",gap:3,marginBottom:5}}>{itv.map((_,x)=><div key={x} style={{flex:1,height:4,borderRadius:2,background:x<i.stage?C.ac:C.bd}}/>)}</div><div style={{fontSize:13,color:C.mt}}>階段 {Math.min(i.stage,6)}/6{!i.mastered&&i.nextDate&&` · 下次：${i.nextDate}（${ddf(i.nextDate)===0?"今天":ddf(i.nextDate)>0?`${ddf(i.nextDate)}天後`:`逾期${-ddf(i.nextDate)}天`}）`}</div></div>
+        {(i.notes||"").trim()&&<div style={{marginBottom:8}}><span onClick={()=>sSn(!sn)} style={{fontSize:13,color:C.ac,cursor:"pointer",fontWeight:600}}>{sn?"▼ 收起筆記":"▶ 查看筆記"}</span>{sn&&<div style={{marginTop:6,background:C.sf,borderRadius:8,padding:"10px 12px"}}>{rNotes(i.notes,issues,openD)}</div>}</div>}
+        {rel.length>0&&<div style={{marginBottom:7}}><span style={{fontSize:13,color:C.mt}}>關聯：</span>{rel.map(r=><span key={r.id} className="tag" style={{marginLeft:4,background:C.am,color:C.ac,fontSize:13}}>{r.name}</span>)}</div>}
+        {bl.length>0&&<div style={{marginBottom:7}}><span style={{fontSize:13,color:C.mt}}>被提及：</span>{bl.map(r=><span key={r.id} className="tag" style={{marginLeft:4,background:C.sf,color:C.mt,fontSize:13,border:`1px solid ${C.bd}`}}>{r.name}</span>)}</div>}
+        {(i.errors||[]).length>0&&<div style={{marginBottom:8,background:C.sf,borderRadius:8,padding:"8px 10px"}}><div style={{fontSize:12,color:C.mt,marginBottom:3}}>錯誤紀錄</div>{i.errors.map((e,x)=><div key={x} style={{fontSize:13,color:C.dg}}>{e.date} · {e.reason}</div>)}</div>}
         {editing&&<EP issue={i} issues={issues} allTags={allTags} editIssue={editI} onDone={()=>sEid(null)}/>}
-        {due&&!i.mastered&&!dm&&!editing&&<div style={{marginTop:8}}>{!sr?<button onClick={()=>sSr(true)} style={{width:"100%",background:C.am,color:C.ac,padding:9,fontWeight:600,fontSize:12}}>評分</button>:<RB onRate={async r=>{await rate(i,r);sSr(false);}} sm/>}</div>}
-        {cd&&<div style={{marginTop:10,background:C.dm,border:`1px solid ${C.dg}`,borderRadius:8,padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:12,color:C.dg}}>確定刪除？</span><div style={{display:"flex",gap:6}}><button onClick={()=>del1(i.id)} style={{background:C.dg,color:"#fff",fontSize:12,padding:"5px 12px",fontWeight:600}}>確認</button><button onClick={()=>sCd(false)} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:12,padding:"5px 10px"}}>取消</button></div></div>}
+        {due&&!i.mastered&&!dm&&!editing&&<div style={{marginTop:8}}>{!sr?<button onClick={()=>sSr(true)} style={{width:"100%",background:C.am,color:C.ac,padding:9,fontWeight:600,fontSize:14}}>評分</button>:<RB onRate={async r=>{await rate(i,r);sSr(false);}} sm/>}</div>}
+        {cd&&<div style={{marginTop:10,background:C.dm,border:`1px solid ${C.dg}`,borderRadius:8,padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:14,color:C.dg}}>確定刪除？</span><div style={{display:"flex",gap:6}}><button onClick={()=>del1(i.id)} style={{background:C.dg,color:"#fff",fontSize:14,padding:"5px 12px",fontWeight:600}}>確認</button><button onClick={()=>sCd(false)} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:14,padding:"5px 10px"}}>取消</button></div></div>}
       </div>
     </div>
   </div>;
@@ -454,12 +454,12 @@ function StatsP({issues,log,plog,savePractice}){
   const[selM,setSelM]=useState(today.slice(0,7));
 
   // ── shared UI ──
-  const MilSL=({ch})=><div style={{display:"flex",alignItems:"center",gap:8,padding:"20px 0 10px",fontFamily:"monospace",fontSize:10,letterSpacing:2,color:MIL}}><span style={{flexShrink:0}}>◈</span><span style={{flexShrink:0}}>{ch}</span><span style={{flex:1,height:1,background:MIL,opacity:.22}}/></div>;
-  const NavBtn=({onClick,ch})=><button onClick={onClick} style={{background:"transparent",border:`1px solid ${C.bd}`,color:C.tx,padding:"6px 14px",borderRadius:6,fontSize:14,lineHeight:1}}>{ch}</button>;
+  const MilSL=({ch})=><div style={{display:"flex",alignItems:"center",gap:8,padding:"20px 0 10px",fontFamily:"monospace",fontSize:12,letterSpacing:2,color:MIL}}><span style={{flexShrink:0}}>◈</span><span style={{flexShrink:0}}>{ch}</span><span style={{flex:1,height:1,background:MIL,opacity:.22}}/></div>;
+  const NavBtn=({onClick,ch})=><button onClick={onClick} style={{background:"transparent",border:`1px solid ${C.bd}`,color:C.tx,padding:"6px 14px",borderRadius:6,fontSize:16,lineHeight:1}}>{ch}</button>;
   const GridLines=()=><>{[25,50,75].map(p=><div key={p} style={{position:"absolute",left:0,right:0,bottom:`${p}%`,height:1,background:MIL_DIM}}/>)}</>;
 
   // ── 主頁 data ──
-  const inBase={background:"transparent",border:"none",borderBottom:`1px solid ${C.bd}`,borderRadius:0,padding:"6px 4px",fontSize:14,fontFamily:"monospace",color:C.tx,outline:"none",textAlign:"center"};
+  const inBase={background:"transparent",border:"none",borderBottom:`1px solid ${C.bd}`,borderRadius:0,padding:"6px 4px",fontSize:16,fontFamily:"monospace",color:C.tx,outline:"none",textAlign:"center"};
   const todayEntries=SUBJECTS.filter(s=>plog[today]?.[s]);
   const days7=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d.toISOString().split("T")[0];});
   const sub7=SUBJECTS.map(s=>({sub:s,total:days7.reduce((a,d)=>a+(plog[d]?.[s]?.count||0),0)}));
@@ -510,7 +510,7 @@ function StatsP({issues,log,plog,savePractice}){
   return<div style={{paddingBottom:8}}>
     {/* ── sub-tab bar ── */}
     <div style={{display:"flex",gap:4,marginBottom:16,overflowX:"auto",paddingBottom:2}}>
-      {[["home","主頁"],["day","日"],["week","週"],["month","月"],["trend","趨勢"]].map(([id,lbl])=><button key={id} onClick={()=>setStab(id)} style={{background:"transparent",border:`1px solid ${stab===id?MIL:C.bd}`,borderRadius:16,padding:"5px 14px",fontSize:12,fontFamily:"monospace",color:stab===id?MIL:C.mt,whiteSpace:"nowrap",flexShrink:0,cursor:"pointer"}}>{lbl}</button>)}
+      {[["home","主頁"],["day","日"],["week","週"],["month","月"],["trend","趨勢"]].map(([id,lbl])=><button key={id} onClick={()=>setStab(id)} style={{background:"transparent",border:`1px solid ${stab===id?MIL:C.bd}`,borderRadius:16,padding:"5px 14px",fontSize:14,fontFamily:"monospace",color:stab===id?MIL:C.mt,whiteSpace:"nowrap",flexShrink:0,cursor:"pointer"}}>{lbl}</button>)}
     </div>
 
     {/* ───── 主頁 ───── */}
@@ -520,40 +520,40 @@ function StatsP({issues,log,plog,savePractice}){
         {todayEntries.length>0
           ?<div style={{marginBottom:10}}>{todayEntries.map(s=>{const d=plog[today][s];return<div key={s} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:`1px solid ${C.bd}`}}>
             <span style={{width:8,height:8,background:SUB_C[s],flexShrink:0,display:"inline-block"}}/>
-            <span style={{flex:1,fontSize:12,fontFamily:"monospace"}}>{s}</span>
-            <span style={{fontSize:12,fontFamily:"monospace",color:MIL}}>{d.count}題</span>
-            <span style={{fontSize:12,fontFamily:"monospace",color:C.mt,marginLeft:8}}>{d.minutes}分</span>
+            <span style={{flex:1,fontSize:14,fontFamily:"monospace"}}>{s}</span>
+            <span style={{fontSize:14,fontFamily:"monospace",color:MIL}}>{d.count}題</span>
+            <span style={{fontSize:14,fontFamily:"monospace",color:C.mt,marginLeft:8}}>{d.minutes}分</span>
           </div>;})}
           </div>
-          :<div style={{fontSize:11,color:C.mt,padding:"4px 0 10px",fontFamily:"monospace"}}>— NO RECORD —</div>
+          :<div style={{fontSize:13,color:C.mt,padding:"4px 0 10px",fontFamily:"monospace"}}>— NO RECORD —</div>
         }
         <div style={{display:"flex",gap:8,alignItems:"center",padding:"10px 0",borderTop:`1px solid ${C.bd}`}}>
-          <select value={sub} onChange={e=>setSub(e.target.value)} style={{flex:1,background:C.sf,color:C.tx,border:`1px solid ${C.bd}`,borderRadius:6,padding:"6px 8px",fontSize:13,outline:"none"}}>
+          <select value={sub} onChange={e=>setSub(e.target.value)} style={{flex:1,background:C.sf,color:C.tx,border:`1px solid ${C.bd}`,borderRadius:6,padding:"6px 8px",fontSize:15,outline:"none"}}>
             {SUBJECTS.map(s=><option key={s} value={s}>{s}</option>)}
           </select>
           <input type="number" inputMode="numeric" min="0" placeholder="題數" value={cnt} onChange={e=>setCnt(e.target.value)} style={{...inBase,width:64}}/>
           <input type="number" inputMode="numeric" min="0" placeholder="分鐘" value={mins} onChange={e=>setMins(e.target.value)} style={{...inBase,width:64}}/>
-          <button onClick={handleAdd} disabled={saving||(!cnt&&!mins)} style={{background:MIL,color:"#000",fontWeight:700,fontSize:15,padding:"7px 14px",borderRadius:6,flexShrink:0}}>{saving?"…":"＋"}</button>
+          <button onClick={handleAdd} disabled={saving||(!cnt&&!mins)} style={{background:MIL,color:"#000",fontWeight:700,fontSize:17,padding:"7px 14px",borderRadius:6,flexShrink:0}}>{saving?"…":"＋"}</button>
         </div>
-        {saveErr&&<div style={{fontSize:11,color:C.dg,fontFamily:"monospace",paddingBottom:8}}>{saveErr}</div>}
+        {saveErr&&<div style={{fontSize:13,color:C.dg,fontFamily:"monospace",paddingBottom:8}}>{saveErr}</div>}
       </div>
       <MilSL ch="近 7 日題數"/>
       <div style={{marginBottom:8}}>
-        {sub7.every(x=>x.total===0)?<div style={{fontSize:11,color:C.mt,padding:"6px 0",fontFamily:"monospace"}}>— NO DATA —</div>
+        {sub7.every(x=>x.total===0)?<div style={{fontSize:13,color:C.mt,padding:"6px 0",fontFamily:"monospace"}}>— NO DATA —</div>
           :sub7.map(({sub,total})=><div key={sub} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
-            <span style={{width:52,fontSize:11,fontFamily:"monospace",color:C.mt,flexShrink:0}}>{sub}</span>
+            <span style={{width:52,fontSize:13,fontFamily:"monospace",color:C.mt,flexShrink:0}}>{sub}</span>
             <div style={{flex:1,height:6,background:C.bd,position:"relative",overflow:"hidden"}}>
               {[25,50,75].map(p=><div key={p} style={{position:"absolute",left:`${p}%`,top:0,bottom:0,width:1,background:MIL_DIM}}/>)}
               <div style={{position:"absolute",top:0,left:0,bottom:0,width:`${total>0?Math.max(Math.round(total/max7*100),3):0}%`,background:MIL,transition:"width .4s"}}/>
             </div>
-            <span style={{fontSize:11,fontFamily:"monospace",color:total>0?MIL:C.mt,width:28,textAlign:"right"}}>{total||"—"}</span>
+            <span style={{fontSize:13,fontFamily:"monospace",color:total>0?MIL:C.mt,width:28,textAlign:"right"}}>{total||"—"}</span>
           </div>)}
       </div>
       <MilSL ch="各科複習進度"/>
       <div style={{marginBottom:8}}>{SUBJECTS.map(s=>{const st=subSt(issues,s);const filled=Math.round(st.avgPct/100*6);return<div key={s} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-        <span style={{width:52,fontSize:11,fontFamily:"monospace",color:SUB_C[s],flexShrink:0,fontWeight:600}}>{s}</span>
+        <span style={{width:52,fontSize:13,fontFamily:"monospace",color:SUB_C[s],flexShrink:0,fontWeight:600}}>{s}</span>
         <div style={{flex:1,display:"flex",gap:2}}>{Array.from({length:6},(_,x)=><div key={x} style={{flex:1,height:8,background:x<filled?MIL:C.bd}}/>)}</div>
-        <span style={{fontSize:10,fontFamily:"monospace",color:C.mt,width:80,textAlign:"right",flexShrink:0}}>{st.avgPct}%[{st.mastered}/{st.total}]</span>
+        <span style={{fontSize:12,fontFamily:"monospace",color:C.mt,width:80,textAlign:"right",flexShrink:0}}>{st.avgPct}%[{st.mastered}/{st.total}]</span>
       </div>;})}
       </div>
       <MilSL ch="每日複習時間（近 30 天）"/>
@@ -564,66 +564,66 @@ function StatsP({issues,log,plog,savePractice}){
             {l30.map((d,i)=>{const h=Math.round(d.mins/mm*72);return<div key={i} title={`${d.date}: ${d.mins}分`} style={{flex:1,display:"flex",flexDirection:"column",justifyContent:"flex-end",height:"100%"}}><div style={{width:"100%",height:h||2,background:d.date===today?MIL:MIL_DIM,minHeight:2}}/></div>;})}
           </div>
         </div>
-        <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.mt,marginTop:6,fontFamily:"monospace"}}><span>T-30</span><span>TODAY</span></div>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:C.mt,marginTop:6,fontFamily:"monospace"}}><span>T-30</span><span>TODAY</span></div>
       </div>
       <MilSL ch="失敗原因排行"/>
       <div style={{marginBottom:8}}>{Object.entries(ec).sort((a,b)=>b[1]-a[1]).map(([r,c],n)=><div key={r} style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-        <span style={{width:20,fontSize:10,fontFamily:"monospace",color:MIL,flexShrink:0}}>[{n+1}]</span>
-        <span style={{width:110,fontSize:12,color:C.mt,flexShrink:0}}>{r}</span>
+        <span style={{width:20,fontSize:12,fontFamily:"monospace",color:MIL,flexShrink:0}}>[{n+1}]</span>
+        <span style={{width:110,fontSize:14,color:C.mt,flexShrink:0}}>{r}</span>
         <div style={{flex:1,height:4,background:C.bd,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.round(c/me*100)}%`,background:MIL,transition:"width .4s"}}/></div>
-        <span style={{fontSize:12,fontFamily:"monospace",color:MIL,width:24,textAlign:"right"}}>{c}</span>
+        <span style={{fontSize:14,fontFamily:"monospace",color:MIL,width:24,textAlign:"right"}}>{c}</span>
       </div>)}</div>
-      {cf.length>0&&<><MilSL ch="高頻混淆爭點"/><div style={{marginBottom:8}}>{cf.map(i=><div key={i.id} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.bd}`,fontSize:13,fontFamily:"monospace"}}><span>{i.name}<span style={{marginLeft:6}}><ST s={i.subject}/></span></span><span style={{color:C.dg,fontWeight:700}}>{i.cc}x</span></div>)}</div></>}
+      {cf.length>0&&<><MilSL ch="高頻混淆爭點"/><div style={{marginBottom:8}}>{cf.map(i=><div key={i.id} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.bd}`,fontSize:15,fontFamily:"monospace"}}><span>{i.name}<span style={{marginLeft:6}}><ST s={i.subject}/></span></span><span style={{color:C.dg,fontWeight:700}}>{i.cc}x</span></div>)}</div></>}
     </div>}
 
     {/* ───── 日 ───── */}
     {stab==="day"&&<div>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-        <NavBtn onClick={prevYM} ch="◀"/><span style={{fontFamily:"monospace",fontSize:14,fontWeight:700}}>{calY}年{calM}月</span><NavBtn onClick={nextYM} ch="▶"/>
+        <NavBtn onClick={prevYM} ch="◀"/><span style={{fontFamily:"monospace",fontSize:16,fontWeight:700}}>{calY}年{calM}月</span><NavBtn onClick={nextYM} ch="▶"/>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>
-        {["一","二","三","四","五","六","日"].map(d=><div key={d} style={{textAlign:"center",fontSize:10,color:C.mt,fontFamily:"monospace",padding:"3px 0"}}>{d}</div>)}
+        {["一","二","三","四","五","六","日"].map(d=><div key={d} style={{textAlign:"center",fontSize:12,color:C.mt,fontFamily:"monospace",padding:"3px 0"}}>{d}</div>)}
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
         {Array.from({length:startDow},(_,i)=><div key={"e"+i}/>)}
         {calDates.map(date=>{const m=log[date]||0;const isSel=selDay===date;const isT=date===today;
           return<div key={date} onClick={()=>setSelDay(date)} style={{background:m>0?`rgba(34,197,94,${0.12+m/calMax*0.78})`:C.cd,border:`1.5px solid ${isSel?MIL:isT?"rgba(34,197,94,.4)":"transparent"}`,borderRadius:4,padding:"6px 2px 4px",cursor:"pointer",textAlign:"center",minHeight:50}}>
-            <div style={{fontSize:12,fontFamily:"monospace",color:isT?MIL:C.tx,fontWeight:isT?700:400}}>{parseInt(date.slice(8))}</div>
-            {m>0&&<div style={{fontSize:9,fontFamily:"monospace",color:MIL,marginTop:2,lineHeight:1.2}}>{fmm(m)}</div>}
+            <div style={{fontSize:14,fontFamily:"monospace",color:isT?MIL:C.tx,fontWeight:isT?700:400}}>{parseInt(date.slice(8))}</div>
+            {m>0&&<div style={{fontSize:11,fontFamily:"monospace",color:MIL,marginTop:2,lineHeight:1.2}}>{fmm(m)}</div>}
           </div>;})}
       </div>
       {(()=>{const dm=log[selDay]||0;const dp=plog[selDay]||{};const ds=SUBJECTS.filter(s=>dp[s]);const dm2=Math.max(...ds.map(s=>dp[s]?.minutes||0),1);
         return<div style={{marginTop:14,padding:"12px 0",borderTop:`1px solid ${C.bd}`}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
-            <span style={{fontFamily:"monospace",fontSize:11,color:C.mt}}>{selDay}</span>
+            <span style={{fontFamily:"monospace",fontSize:13,color:C.mt}}>{selDay}</span>
             <span style={{fontFamily:"monospace",fontSize:20,fontWeight:700,color:dm?MIL:C.mt}}>{fmm(dm)}</span>
           </div>
           {ds.length>0&&ds.map(s=>{const d=dp[s];return<div key={s} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
             <span style={{width:8,height:8,background:SUB_C[s],flexShrink:0,display:"inline-block"}}/>
-            <span style={{width:48,fontSize:11,fontFamily:"monospace",color:C.mt,flexShrink:0}}>{s}</span>
+            <span style={{width:48,fontSize:13,fontFamily:"monospace",color:C.mt,flexShrink:0}}>{s}</span>
             <div style={{flex:1,height:6,background:C.bd,overflow:"hidden"}}>
               <div style={{height:"100%",width:`${Math.round((d.minutes||0)/dm2*100)}%`,background:SUB_C[s]}}/>
             </div>
-            <span style={{fontSize:10,fontFamily:"monospace",color:C.mt,width:56,textAlign:"right",flexShrink:0}}>{d.count}題 {d.minutes}分</span>
+            <span style={{fontSize:12,fontFamily:"monospace",color:C.mt,width:56,textAlign:"right",flexShrink:0}}>{d.count}題 {d.minutes}分</span>
           </div>;})}
-          {ds.length===0&&<div style={{fontSize:11,color:C.mt,fontFamily:"monospace"}}>— 無記錄 —</div>}
+          {ds.length===0&&<div style={{fontSize:13,color:C.mt,fontFamily:"monospace"}}>— 無記錄 —</div>}
         </div>;})()}
     </div>}
 
     {/* ───── 週 ───── */}
     {stab==="week"&&<div>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-        <NavBtn onClick={prevQ} ch="◀"/><span style={{fontFamily:"monospace",fontSize:14,fontWeight:700}}>{qY} Q{qQ}</span><NavBtn onClick={nextQ} ch="▶"/>
+        <NavBtn onClick={prevQ} ch="◀"/><span style={{fontFamily:"monospace",fontSize:16,fontWeight:700}}>{qY} Q{qQ}</span><NavBtn onClick={nextQ} ch="▶"/>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
         {qWks.map(wk=>{const total=sumLog(log,wkDates(wk));const isSel=selWk===wk;
           return<div key={wk} onClick={()=>setSelWk(wk)} style={{background:C.cd,border:`1.5px solid ${isSel?MIL:C.bd}`,borderRadius:6,padding:"10px 8px",cursor:"pointer",textAlign:"center"}}>
-            <div style={{fontSize:11,fontFamily:"monospace",color:C.mt,marginBottom:4}}>{wk.slice(5,7)}/{wk.slice(8)}~</div>
-            <div style={{fontSize:13,fontFamily:"monospace",color:total?MIL:C.mt,fontWeight:700}}>{fmm(total)}</div>
+            <div style={{fontSize:13,fontFamily:"monospace",color:C.mt,marginBottom:4}}>{wk.slice(5,7)}/{wk.slice(8)}~</div>
+            <div style={{fontSize:15,fontFamily:"monospace",color:total?MIL:C.mt,fontWeight:700}}>{fmm(total)}</div>
           </div>;})}
       </div>
       <div style={{marginTop:14,padding:"12px 0",borderTop:`1px solid ${C.bd}`}}>
-        <div style={{fontFamily:"monospace",fontSize:11,color:C.mt,marginBottom:10}}>
+        <div style={{fontFamily:"monospace",fontSize:13,color:C.mt,marginBottom:10}}>
           {selWk} ~ {addDays(selWk,6)} · 合計 <span style={{color:MIL,fontWeight:700}}>{fmm(sumLog(log,selWkDs))}</span>
         </div>
         <div style={{position:"relative",height:80}}>
@@ -632,7 +632,7 @@ function StatsP({issues,log,plog,savePractice}){
             {selWkDs.map((d,i)=>{const m=log[d]||0;const h=Math.round(m/selWkMax*76);const isT=d===today;
               return<div key={d} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",height:"100%"}}>
                 <div style={{width:"100%",height:h||2,background:isT?MIL:MIL_DIM,minHeight:2}}/>
-                <div style={{fontSize:9,color:isT?MIL:C.mt,fontFamily:"monospace",marginTop:4}}>{["一","二","三","四","五","六","日"][i]}</div>
+                <div style={{fontSize:11,color:isT?MIL:C.mt,fontFamily:"monospace",marginTop:4}}>{["一","二","三","四","五","六","日"][i]}</div>
               </div>;})}
           </div>
         </div>
@@ -642,21 +642,21 @@ function StatsP({issues,log,plog,savePractice}){
     {/* ───── 月 ───── */}
     {stab==="month"&&<div>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-        <NavBtn onClick={()=>setViewY(y=>y-1)} ch="◀"/><span style={{fontFamily:"monospace",fontSize:14,fontWeight:700}}>{viewY}</span><NavBtn onClick={()=>setViewY(y=>y+1)} ch="▶"/>
+        <NavBtn onClick={()=>setViewY(y=>y-1)} ch="◀"/><span style={{fontFamily:"monospace",fontSize:16,fontWeight:700}}>{viewY}</span><NavBtn onClick={()=>setViewY(y=>y+1)} ch="▶"/>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
         {Array.from({length:12},(_,i)=>{const ym=`${viewY}-${String(i+1).padStart(2,"0")}`;const total=moMins(viewY,i+1);const isSel=selM===ym;
           return<div key={ym} onClick={()=>setSelM(ym)} style={{background:C.cd,border:`1.5px solid ${isSel?MIL:C.bd}`,borderRadius:6,padding:"10px 8px",cursor:"pointer",textAlign:"center"}}>
-            <div style={{fontSize:11,fontFamily:"monospace",color:C.mt,marginBottom:4}}>{mNames[i]}</div>
-            <div style={{fontSize:13,fontFamily:"monospace",color:total?MIL:C.mt,fontWeight:700}}>{fmm(total)}</div>
+            <div style={{fontSize:13,fontFamily:"monospace",color:C.mt,marginBottom:4}}>{mNames[i]}</div>
+            <div style={{fontSize:15,fontFamily:"monospace",color:total?MIL:C.mt,fontWeight:700}}>{fmm(total)}</div>
           </div>;})}
       </div>
       {(()=>{const mTotal=moMins(selMY,selMM);const mDs=moDates(selMY,selMM);const mAct=mDs.filter(d=>log[d]>0).length;
         return<div style={{marginTop:14,padding:"12px 0",borderTop:`1px solid ${C.bd}`}}>
           <div style={{display:"flex",justifyContent:"space-around",marginBottom:12}}>
             {[["月合計",fmm(mTotal)],[`日均(${mAct}天)`,fmm(mAct?Math.round(mTotal/mAct):0)],["活躍/天數",`${mAct}/${mDs.length}`]].map(([l,v])=><div key={l} style={{textAlign:"center"}}>
-              <div style={{fontSize:9,color:C.mt,fontFamily:"monospace",marginBottom:2}}>{l}</div>
-              <div style={{fontSize:15,fontWeight:700,color:MIL,fontFamily:"monospace"}}>{v}</div>
+              <div style={{fontSize:11,color:C.mt,fontFamily:"monospace",marginBottom:2}}>{l}</div>
+              <div style={{fontSize:17,fontWeight:700,color:MIL,fontFamily:"monospace"}}>{v}</div>
             </div>)}
           </div>
           <div style={{position:"relative",height:80}}>
@@ -683,7 +683,7 @@ function StatsP({issues,log,plog,savePractice}){
           </div>;})}
         </div>
       </div>
-      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.mt,fontFamily:"monospace",marginBottom:16}}><span>T-30</span><span>TODAY</span></div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.mt,fontFamily:"monospace",marginBottom:16}}><span>T-30</span><span>TODAY</span></div>
 
       <MilSL ch={`每週複習時間（近 12 週）max: ${fmm(tMaxWk)}`}/>
       <div style={{position:"relative",height:90,marginBottom:4}}>
@@ -694,7 +694,7 @@ function StatsP({issues,log,plog,savePractice}){
           </div>;})}
         </div>
       </div>
-      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.mt,fontFamily:"monospace",marginBottom:16}}><span>{t12wk[0]?.wk?.slice(5)}</span><span>THIS WK</span></div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.mt,fontFamily:"monospace",marginBottom:16}}><span>{t12wk[0]?.wk?.slice(5)}</span><span>THIS WK</span></div>
 
       <MilSL ch={`每月複習時間（近 12 月）max: ${fmm(tMaxMo)}`}/>
       <div style={{position:"relative",height:90,marginBottom:4}}>
@@ -705,7 +705,7 @@ function StatsP({issues,log,plog,savePractice}){
           </div>;})}
         </div>
       </div>
-      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.mt,fontFamily:"monospace",marginBottom:16}}><span>{t12mo[0]?.label}</span><span>THIS MO</span></div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.mt,fontFamily:"monospace",marginBottom:16}}><span>{t12mo[0]?.label}</span><span>THIS MO</span></div>
 
       <MilSL ch="每日科目題數（近 14 天）"/>
       <div style={{position:"relative",height:90,marginBottom:4}}>
@@ -722,9 +722,9 @@ function StatsP({issues,log,plog,savePractice}){
             </div>;})}
         </div>
       </div>
-      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.mt,fontFamily:"monospace",marginBottom:8}}><span>T-14</span><span>TODAY</span></div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:C.mt,fontFamily:"monospace",marginBottom:8}}><span>T-14</span><span>TODAY</span></div>
       <div style={{display:"flex",flexWrap:"wrap",gap:"4px 10px"}}>
-        {SUBJECTS.filter(s=>t14.some(d=>plog[d]?.[s]?.count>0)).map(s=><span key={s} style={{fontSize:9,fontFamily:"monospace",color:C.mt,display:"flex",alignItems:"center",gap:3}}><span style={{width:7,height:7,background:SUB_C[s],display:"inline-block",flexShrink:0}}/>{s}</span>)}
+        {SUBJECTS.filter(s=>t14.some(d=>plog[d]?.[s]?.count>0)).map(s=><span key={s} style={{fontSize:11,fontFamily:"monospace",color:C.mt,display:"flex",alignItems:"center",gap:3}}><span style={{width:7,height:7,background:SUB_C[s],display:"inline-block",flexShrink:0}}/>{s}</span>)}
       </div>
     </div>}
   </div>;
