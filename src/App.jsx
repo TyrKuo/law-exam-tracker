@@ -421,15 +421,46 @@ function Cd({i,issues,due,rate,editing,sEid,editI,dm,sel,tS,del1,allTags,openD})
   </div>;
 }
 
+// ═══ 統計 helpers ═══
+const fmm=m=>{if(!m)return"—";const h=Math.floor(m/60),mn=m%60;return h?`${h}h${mn?mn+"m":""}`:`${mn}m`;};
+const addDays=(s,n)=>{const d=new Date(s);d.setDate(d.getDate()+n);return d.toISOString().split("T")[0];};
+const wkStart=s=>{const d=new Date(s);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.toISOString().split("T")[0];};
+const sumLog=(log,dates)=>dates.reduce((a,d)=>a+(log[d]||0),0);
+
 // ═══ 統計 ═══
 function StatsP({issues,log,plog,savePractice}){
   const today=td();
+  const MIL="#22c55e";const MIL_DIM="rgba(34,197,94,0.12)";
+
+  // sub-tab
+  const[stab,setStab]=useState("home");
+
+  // 主頁 state
   const[sub,setSub]=useState(SUBJECTS[0]);
   const[cnt,setCnt]=useState("");const[mins,setMins]=useState("");
   const[saving,setSaving]=useState(false);const[saveErr,setSaveErr]=useState(null);
   async function handleAdd(){if(!cnt&&!mins)return;setSaving(true);setSaveErr(null);try{await savePractice(sub,cnt,mins);setCnt("");setMins("");}catch(e){setSaveErr("儲存失敗："+e.message);}finally{setSaving(false);}}
 
-  const MIL="#22c55e";const MIL_DIM="rgba(34,197,94,0.12)";
+  // 日 state
+  const[viewYM,setViewYM]=useState(today.slice(0,7));
+  const[selDay,setSelDay]=useState(today);
+
+  // 週 state
+  const[viewQ,setViewQ]=useState(()=>{const d=new Date();return`${d.getFullYear()}-Q${Math.floor(d.getMonth()/3)+1}`;});
+  const[selWk,setSelWk]=useState(wkStart(today));
+
+  // 月 state
+  const[viewY,setViewY]=useState(new Date().getFullYear());
+  const[selM,setSelM]=useState(today.slice(0,7));
+
+  // ── shared UI ──
+  const MilSL=({ch})=><div style={{display:"flex",alignItems:"center",gap:8,padding:"20px 0 10px",fontFamily:"monospace",fontSize:10,letterSpacing:2,color:MIL}}><span style={{flexShrink:0}}>◈</span><span style={{flexShrink:0}}>{ch}</span><span style={{flex:1,height:1,background:MIL,opacity:.22}}/></div>;
+  const NavBtn=({onClick,ch})=><button onClick={onClick} style={{background:"transparent",border:`1px solid ${C.bd}`,color:C.tx,padding:"6px 14px",borderRadius:6,fontSize:14,lineHeight:1}}>{ch}</button>;
+  const GridLines=()=><>{[25,50,75].map(p=><div key={p} style={{position:"absolute",left:0,right:0,bottom:`${p}%`,height:1,background:MIL_DIM}}/>)}</>;
+
+  // ── 主頁 data ──
+  const inBase={background:"transparent",border:"none",borderBottom:`1px solid ${C.bd}`,borderRadius:0,padding:"6px 4px",fontSize:14,fontFamily:"monospace",color:C.tx,outline:"none",textAlign:"center"};
+  const todayEntries=SUBJECTS.filter(s=>plog[today]?.[s]);
   const days7=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d.toISOString().split("T")[0];});
   const sub7=SUBJECTS.map(s=>({sub:s,total:days7.reduce((a,d)=>a+(plog[d]?.[s]?.count||0),0)}));
   const max7=Math.max(...sub7.map(x=>x.total),1);
@@ -439,76 +470,262 @@ function StatsP({issues,log,plog,savePractice}){
   issues.forEach(i=>(i.errors||[]).forEach(e=>{if(ec[e.reason]!==undefined)ec[e.reason]++;}));
   const me=Math.max(...Object.values(ec),1);
   const cf=issues.map(i=>({...i,cc:(i.errors||[]).filter(e=>e.reason==="與其他爭點混淆").length})).filter(i=>i.cc>0).sort((a,b)=>b.cc-a.cc).slice(0,5);
-  const MilSL=({ch})=><div style={{display:"flex",alignItems:"center",gap:8,padding:"20px 0 10px",fontFamily:"monospace",fontSize:10,letterSpacing:2,color:MIL}}><span style={{flexShrink:0}}>◈</span><span style={{flexShrink:0}}>{ch}</span><span style={{flex:1,height:1,background:MIL,opacity:.22}}/></div>;
-  const todayEntries=SUBJECTS.filter(s=>plog[today]?.[s]);
-  const inBase={background:"transparent",border:"none",borderBottom:`1px solid ${C.bd}`,borderRadius:0,padding:"6px 4px",fontSize:14,fontFamily:"monospace",color:C.tx,outline:"none",textAlign:"center"};
+
+  // ── 日 data ──
+  const calY=parseInt(viewYM.slice(0,4));const calM=parseInt(viewYM.slice(5,7));
+  const daysInM=new Date(calY,calM,0).getDate();
+  const startDow=(new Date(calY,calM-1,1).getDay()+6)%7;
+  const calDates=Array.from({length:daysInM},(_,i)=>{const d=new Date(calY,calM-1,i+1);return d.toISOString().split("T")[0];});
+  const calMax=Math.max(...calDates.map(d=>log[d]||0),1);
+  const prevYM=()=>{const d=new Date(calY,calM-2,1);setViewYM(d.toISOString().slice(0,7));};
+  const nextYM=()=>{const d=new Date(calY,calM,1);setViewYM(d.toISOString().slice(0,7));};
+
+  // ── 週 data ──
+  const[qY,qQ]=viewQ.split("-Q").map(Number);
+  const qStart=new Date(qY,(qQ-1)*3,1);const qEnd=new Date(qY,qQ*3,0);
+  const qWks=[];{let w=wkStart(qStart.toISOString().split("T")[0]);while(new Date(w)<=qEnd){qWks.push(w);w=addDays(w,7);}}
+  const wkDates=wk=>Array.from({length:7},(_,i)=>addDays(wk,i));
+  const prevQ=()=>{const nq=qQ===1?4:qQ-1;setViewQ(`${qQ===1?qY-1:qY}-Q${nq}`);};
+  const nextQ=()=>{const nq=qQ===4?1:qQ+1;setViewQ(`${qQ===4?qY+1:qY}-Q${nq}`);};
+  const selWkDs=wkDates(selWk);const selWkMax=Math.max(...selWkDs.map(d=>log[d]||0),1);
+
+  // ── 月 data ──
+  const mNames=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const moDates=(y,m)=>Array.from({length:new Date(y,m,0).getDate()},(_,i)=>`${y}-${String(m).padStart(2,"0")}-${String(i+1).padStart(2,"0")}`);
+  const moMins=(y,m)=>sumLog(log,moDates(y,m));
+  const selMY=parseInt(selM.slice(0,4));const selMM=parseInt(selM.slice(5,7));
+  const selMWks=[];{let w=wkStart(moDates(selMY,selMM)[0]);const end=new Date(selMY,selMM,0);while(new Date(w)<=end){selMWks.push(w);w=addDays(w,7);}}
+  const selMWkMax=Math.max(...selMWks.map(w=>sumLog(log,wkDates(w))),1);
+
+  // ── 趨勢 data ──
+  const t30=Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-29+i);const k=d.toISOString().split("T")[0];return{date:k,mins:log[k]||0};});
+  const tMax30=Math.max(...t30.map(d=>d.mins),1);
+  const t12wk=Array.from({length:12},(_,i)=>{const w=addDays(wkStart(today),-(11-i)*7);return{wk:w,total:sumLog(log,wkDates(w))};});
+  const tMaxWk=Math.max(...t12wk.map(w=>w.total),1);
+  const t12mo=Array.from({length:12},(_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-(11-i));return{label:mNames[d.getMonth()],y:d.getFullYear(),m:d.getMonth()+1};}).map(x=>({...x,total:moMins(x.y,x.m)}));
+  const tMaxMo=Math.max(...t12mo.map(x=>x.total),1);
+  const t14=Array.from({length:14},(_,i)=>{const d=new Date();d.setDate(d.getDate()-13+i);return d.toISOString().split("T")[0];});
+  const t14Max=Math.max(...t14.map(d=>SUBJECTS.reduce((a,s)=>a+(plog[d]?.[s]?.count||0),0)),1);
 
   return<div style={{paddingBottom:8}}>
-    <MilSL ch="今日練習記錄"/>
-    <div style={{marginBottom:4}}>
-      {todayEntries.length>0
-        ?<div style={{marginBottom:10}}>{todayEntries.map(s=>{const d=plog[today][s];return<div key={s} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:`1px solid ${C.bd}`}}>
-          <span style={{width:8,height:8,background:SUB_C[s],flexShrink:0,display:"inline-block"}}/>
-          <span style={{flex:1,fontSize:12,fontFamily:"monospace"}}>{s}</span>
-          <span style={{fontSize:12,fontFamily:"monospace",color:MIL}}>{d.count}題</span>
-          <span style={{fontSize:12,fontFamily:"monospace",color:C.mt,marginLeft:8}}>{d.minutes}分</span>
-        </div>;})}
-        </div>
-        :<div style={{fontSize:11,color:C.mt,padding:"4px 0 10px",fontFamily:"monospace"}}>— NO RECORD —</div>
-      }
-      <div style={{display:"flex",gap:8,alignItems:"center",padding:"10px 0",borderTop:`1px solid ${C.bd}`}}>
-        <select value={sub} onChange={e=>setSub(e.target.value)} style={{flex:1,background:C.sf,color:C.tx,border:`1px solid ${C.bd}`,borderRadius:6,padding:"6px 8px",fontSize:13,outline:"none"}}>
-          {SUBJECTS.map(s=><option key={s} value={s}>{s}</option>)}
-        </select>
-        <input type="number" inputMode="numeric" min="0" placeholder="題數" value={cnt} onChange={e=>setCnt(e.target.value)} style={{...inBase,width:64}}/>
-        <input type="number" inputMode="numeric" min="0" placeholder="分鐘" value={mins} onChange={e=>setMins(e.target.value)} style={{...inBase,width:64}}/>
-        <button onClick={handleAdd} disabled={saving||(!cnt&&!mins)} style={{background:MIL,color:"#000",fontWeight:700,fontSize:15,padding:"7px 14px",borderRadius:6,flexShrink:0}}>{saving?"…":"＋"}</button>
-      </div>
-      {saveErr&&<div style={{fontSize:11,color:C.dg,fontFamily:"monospace",paddingBottom:8}}>{saveErr}</div>}
+    {/* ── sub-tab bar ── */}
+    <div style={{display:"flex",gap:4,marginBottom:16,overflowX:"auto",paddingBottom:2}}>
+      {[["home","主頁"],["day","日"],["week","週"],["month","月"],["trend","趨勢"]].map(([id,lbl])=><button key={id} onClick={()=>setStab(id)} style={{background:"transparent",border:`1px solid ${stab===id?MIL:C.bd}`,borderRadius:16,padding:"5px 14px",fontSize:12,fontFamily:"monospace",color:stab===id?MIL:C.mt,whiteSpace:"nowrap",flexShrink:0,cursor:"pointer"}}>{lbl}</button>)}
     </div>
 
-    <MilSL ch="近 7 日題數"/>
-    <div style={{marginBottom:8}}>
-      {sub7.every(x=>x.total===0)
-        ?<div style={{fontSize:11,color:C.mt,padding:"6px 0",fontFamily:"monospace"}}>— NO DATA —</div>
-        :sub7.map(({sub,total})=><div key={sub} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
-          <span style={{width:52,fontSize:11,fontFamily:"monospace",color:C.mt,flexShrink:0}}>{sub}</span>
-          <div style={{flex:1,height:6,background:C.bd,borderRadius:0,position:"relative",overflow:"hidden"}}>
-            {[25,50,75].map(p=><div key={p} style={{position:"absolute",left:`${p}%`,top:0,bottom:0,width:1,background:MIL_DIM}}/>)}
-            <div style={{position:"absolute",top:0,left:0,bottom:0,width:`${total>0?Math.max(Math.round(total/max7*100),3):0}%`,background:MIL,transition:"width .4s ease"}}/>
+    {/* ───── 主頁 ───── */}
+    {stab==="home"&&<div>
+      <MilSL ch="今日練習記錄"/>
+      <div style={{marginBottom:4}}>
+        {todayEntries.length>0
+          ?<div style={{marginBottom:10}}>{todayEntries.map(s=>{const d=plog[today][s];return<div key={s} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:`1px solid ${C.bd}`}}>
+            <span style={{width:8,height:8,background:SUB_C[s],flexShrink:0,display:"inline-block"}}/>
+            <span style={{flex:1,fontSize:12,fontFamily:"monospace"}}>{s}</span>
+            <span style={{fontSize:12,fontFamily:"monospace",color:MIL}}>{d.count}題</span>
+            <span style={{fontSize:12,fontFamily:"monospace",color:C.mt,marginLeft:8}}>{d.minutes}分</span>
+          </div>;})}
           </div>
-          <span style={{fontSize:11,fontFamily:"monospace",color:total>0?MIL:C.mt,width:28,textAlign:"right"}}>{total||"—"}</span>
-        </div>)
-      }
-    </div>
+          :<div style={{fontSize:11,color:C.mt,padding:"4px 0 10px",fontFamily:"monospace"}}>— NO RECORD —</div>
+        }
+        <div style={{display:"flex",gap:8,alignItems:"center",padding:"10px 0",borderTop:`1px solid ${C.bd}`}}>
+          <select value={sub} onChange={e=>setSub(e.target.value)} style={{flex:1,background:C.sf,color:C.tx,border:`1px solid ${C.bd}`,borderRadius:6,padding:"6px 8px",fontSize:13,outline:"none"}}>
+            {SUBJECTS.map(s=><option key={s} value={s}>{s}</option>)}
+          </select>
+          <input type="number" inputMode="numeric" min="0" placeholder="題數" value={cnt} onChange={e=>setCnt(e.target.value)} style={{...inBase,width:64}}/>
+          <input type="number" inputMode="numeric" min="0" placeholder="分鐘" value={mins} onChange={e=>setMins(e.target.value)} style={{...inBase,width:64}}/>
+          <button onClick={handleAdd} disabled={saving||(!cnt&&!mins)} style={{background:MIL,color:"#000",fontWeight:700,fontSize:15,padding:"7px 14px",borderRadius:6,flexShrink:0}}>{saving?"…":"＋"}</button>
+        </div>
+        {saveErr&&<div style={{fontSize:11,color:C.dg,fontFamily:"monospace",paddingBottom:8}}>{saveErr}</div>}
+      </div>
+      <MilSL ch="近 7 日題數"/>
+      <div style={{marginBottom:8}}>
+        {sub7.every(x=>x.total===0)?<div style={{fontSize:11,color:C.mt,padding:"6px 0",fontFamily:"monospace"}}>— NO DATA —</div>
+          :sub7.map(({sub,total})=><div key={sub} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+            <span style={{width:52,fontSize:11,fontFamily:"monospace",color:C.mt,flexShrink:0}}>{sub}</span>
+            <div style={{flex:1,height:6,background:C.bd,position:"relative",overflow:"hidden"}}>
+              {[25,50,75].map(p=><div key={p} style={{position:"absolute",left:`${p}%`,top:0,bottom:0,width:1,background:MIL_DIM}}/>)}
+              <div style={{position:"absolute",top:0,left:0,bottom:0,width:`${total>0?Math.max(Math.round(total/max7*100),3):0}%`,background:MIL,transition:"width .4s"}}/>
+            </div>
+            <span style={{fontSize:11,fontFamily:"monospace",color:total>0?MIL:C.mt,width:28,textAlign:"right"}}>{total||"—"}</span>
+          </div>)}
+      </div>
+      <MilSL ch="各科複習進度"/>
+      <div style={{marginBottom:8}}>{SUBJECTS.map(s=>{const st=subSt(issues,s);const filled=Math.round(st.avgPct/100*6);return<div key={s} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+        <span style={{width:52,fontSize:11,fontFamily:"monospace",color:SUB_C[s],flexShrink:0,fontWeight:600}}>{s}</span>
+        <div style={{flex:1,display:"flex",gap:2}}>{Array.from({length:6},(_,x)=><div key={x} style={{flex:1,height:8,background:x<filled?MIL:C.bd}}/>)}</div>
+        <span style={{fontSize:10,fontFamily:"monospace",color:C.mt,width:80,textAlign:"right",flexShrink:0}}>{st.avgPct}%[{st.mastered}/{st.total}]</span>
+      </div>;})}
+      </div>
+      <MilSL ch="每日複習時間（近 30 天）"/>
+      <div style={{marginBottom:8}}>
+        <div style={{position:"relative",height:80}}>
+          <GridLines/>
+          <div style={{display:"flex",alignItems:"flex-end",gap:2,height:"100%",position:"relative",zIndex:2}}>
+            {l30.map((d,i)=>{const h=Math.round(d.mins/mm*72);return<div key={i} title={`${d.date}: ${d.mins}分`} style={{flex:1,display:"flex",flexDirection:"column",justifyContent:"flex-end",height:"100%"}}><div style={{width:"100%",height:h||2,background:d.date===today?MIL:MIL_DIM,minHeight:2}}/></div>;})}
+          </div>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.mt,marginTop:6,fontFamily:"monospace"}}><span>T-30</span><span>TODAY</span></div>
+      </div>
+      <MilSL ch="失敗原因排行"/>
+      <div style={{marginBottom:8}}>{Object.entries(ec).sort((a,b)=>b[1]-a[1]).map(([r,c],n)=><div key={r} style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+        <span style={{width:20,fontSize:10,fontFamily:"monospace",color:MIL,flexShrink:0}}>[{n+1}]</span>
+        <span style={{width:110,fontSize:12,color:C.mt,flexShrink:0}}>{r}</span>
+        <div style={{flex:1,height:4,background:C.bd,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.round(c/me*100)}%`,background:MIL,transition:"width .4s"}}/></div>
+        <span style={{fontSize:12,fontFamily:"monospace",color:MIL,width:24,textAlign:"right"}}>{c}</span>
+      </div>)}</div>
+      {cf.length>0&&<><MilSL ch="高頻混淆爭點"/><div style={{marginBottom:8}}>{cf.map(i=><div key={i.id} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.bd}`,fontSize:13,fontFamily:"monospace"}}><span>{i.name}<span style={{marginLeft:6}}><ST s={i.subject}/></span></span><span style={{color:C.dg,fontWeight:700}}>{i.cc}x</span></div>)}</div></>}
+    </div>}
 
-    <MilSL ch="各科複習進度"/>
-    <div style={{marginBottom:8}}>{SUBJECTS.map(s=>{const st=subSt(issues,s);const filled=Math.round(st.avgPct/100*6);return<div key={s} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-      <span style={{width:52,fontSize:11,fontFamily:"monospace",color:SUB_C[s],flexShrink:0,fontWeight:600}}>{s}</span>
-      <div style={{flex:1,display:"flex",gap:2}}>{Array.from({length:6},(_,x)=><div key={x} style={{flex:1,height:8,background:x<filled?MIL:C.bd,borderRadius:0}}/>)}</div>
-      <span style={{fontSize:10,fontFamily:"monospace",color:C.mt,width:80,textAlign:"right",flexShrink:0}}>{st.avgPct}%[{st.mastered}/{st.total}]</span>
-    </div>;})}
-    </div>
+    {/* ───── 日 ───── */}
+    {stab==="day"&&<div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+        <NavBtn onClick={prevYM} ch="◀"/><span style={{fontFamily:"monospace",fontSize:14,fontWeight:700}}>{calY}年{calM}月</span><NavBtn onClick={nextYM} ch="▶"/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>
+        {["一","二","三","四","五","六","日"].map(d=><div key={d} style={{textAlign:"center",fontSize:10,color:C.mt,fontFamily:"monospace",padding:"3px 0"}}>{d}</div>)}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
+        {Array.from({length:startDow},(_,i)=><div key={"e"+i}/>)}
+        {calDates.map(date=>{const m=log[date]||0;const isSel=selDay===date;const isT=date===today;
+          return<div key={date} onClick={()=>setSelDay(date)} style={{background:m>0?`rgba(34,197,94,${0.12+m/calMax*0.78})`:C.cd,border:`1.5px solid ${isSel?MIL:isT?"rgba(34,197,94,.4)":"transparent"}`,borderRadius:4,padding:"6px 2px 4px",cursor:"pointer",textAlign:"center",minHeight:50}}>
+            <div style={{fontSize:12,fontFamily:"monospace",color:isT?MIL:C.tx,fontWeight:isT?700:400}}>{parseInt(date.slice(8))}</div>
+            {m>0&&<div style={{fontSize:9,fontFamily:"monospace",color:MIL,marginTop:2,lineHeight:1.2}}>{fmm(m)}</div>}
+          </div>;})}
+      </div>
+      {(()=>{const dm=log[selDay]||0;const dp=plog[selDay]||{};const ds=SUBJECTS.filter(s=>dp[s]);const dm2=Math.max(...ds.map(s=>dp[s]?.minutes||0),1);
+        return<div style={{marginTop:14,padding:"12px 0",borderTop:`1px solid ${C.bd}`}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
+            <span style={{fontFamily:"monospace",fontSize:11,color:C.mt}}>{selDay}</span>
+            <span style={{fontFamily:"monospace",fontSize:20,fontWeight:700,color:dm?MIL:C.mt}}>{fmm(dm)}</span>
+          </div>
+          {ds.length>0&&ds.map(s=>{const d=dp[s];return<div key={s} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+            <span style={{width:8,height:8,background:SUB_C[s],flexShrink:0,display:"inline-block"}}/>
+            <span style={{width:48,fontSize:11,fontFamily:"monospace",color:C.mt,flexShrink:0}}>{s}</span>
+            <div style={{flex:1,height:6,background:C.bd,overflow:"hidden"}}>
+              <div style={{height:"100%",width:`${Math.round((d.minutes||0)/dm2*100)}%`,background:SUB_C[s]}}/>
+            </div>
+            <span style={{fontSize:10,fontFamily:"monospace",color:C.mt,width:56,textAlign:"right",flexShrink:0}}>{d.count}題 {d.minutes}分</span>
+          </div>;})}
+          {ds.length===0&&<div style={{fontSize:11,color:C.mt,fontFamily:"monospace"}}>— 無記錄 —</div>}
+        </div>;})()}
+    </div>}
 
-    <MilSL ch="每日複習時間（近 30 天）"/>
-    <div style={{marginBottom:8}}>
-      <div style={{position:"relative",height:80}}>
-        {[25,50,75].map(p=><div key={p} style={{position:"absolute",left:0,right:0,bottom:`${p}%`,height:1,background:MIL_DIM,zIndex:1}}/>)}
-        <div style={{display:"flex",alignItems:"flex-end",gap:2,height:"100%",position:"relative",zIndex:2}}>
-          {l30.map((d,i)=>{const h=Math.round(d.mins/mm*72);return<div key={i} title={`${d.date}: ${d.mins}分`} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",height:"100%"}}><div style={{width:"100%",height:h||2,background:d.date===today?MIL:MIL_DIM,borderRadius:0,minHeight:2}}/></div>;})}
+    {/* ───── 週 ───── */}
+    {stab==="week"&&<div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+        <NavBtn onClick={prevQ} ch="◀"/><span style={{fontFamily:"monospace",fontSize:14,fontWeight:700}}>{qY} Q{qQ}</span><NavBtn onClick={nextQ} ch="▶"/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
+        {qWks.map(wk=>{const total=sumLog(log,wkDates(wk));const isSel=selWk===wk;
+          return<div key={wk} onClick={()=>setSelWk(wk)} style={{background:C.cd,border:`1.5px solid ${isSel?MIL:C.bd}`,borderRadius:6,padding:"10px 8px",cursor:"pointer",textAlign:"center"}}>
+            <div style={{fontSize:11,fontFamily:"monospace",color:C.mt,marginBottom:4}}>{wk.slice(5,7)}/{wk.slice(8)}~</div>
+            <div style={{fontSize:13,fontFamily:"monospace",color:total?MIL:C.mt,fontWeight:700}}>{fmm(total)}</div>
+          </div>;})}
+      </div>
+      <div style={{marginTop:14,padding:"12px 0",borderTop:`1px solid ${C.bd}`}}>
+        <div style={{fontFamily:"monospace",fontSize:11,color:C.mt,marginBottom:10}}>
+          {selWk} ~ {addDays(selWk,6)} · 合計 <span style={{color:MIL,fontWeight:700}}>{fmm(sumLog(log,selWkDs))}</span>
+        </div>
+        <div style={{position:"relative",height:80}}>
+          <GridLines/>
+          <div style={{display:"flex",alignItems:"flex-end",gap:4,height:"100%",position:"relative",zIndex:2}}>
+            {selWkDs.map((d,i)=>{const m=log[d]||0;const h=Math.round(m/selWkMax*76);const isT=d===today;
+              return<div key={d} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",height:"100%"}}>
+                <div style={{width:"100%",height:h||2,background:isT?MIL:MIL_DIM,minHeight:2}}/>
+                <div style={{fontSize:9,color:isT?MIL:C.mt,fontFamily:"monospace",marginTop:4}}>{["一","二","三","四","五","六","日"][i]}</div>
+              </div>;})}
+          </div>
         </div>
       </div>
-      <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.mt,marginTop:6,fontFamily:"monospace"}}><span>T-30</span><span>TODAY</span></div>
-    </div>
+    </div>}
 
-    <MilSL ch="失敗原因排行"/>
-    <div style={{marginBottom:8}}>{Object.entries(ec).sort((a,b)=>b[1]-a[1]).map(([r,c],n)=><div key={r} style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-      <span style={{width:20,fontSize:10,fontFamily:"monospace",color:MIL,flexShrink:0}}>[{n+1}]</span>
-      <span style={{width:110,fontSize:12,color:C.mt,flexShrink:0}}>{r}</span>
-      <div style={{flex:1,height:4,background:C.bd,borderRadius:0,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.round(c/me*100)}%`,background:MIL,transition:"width .4s"}}/></div>
-      <span style={{fontSize:12,fontFamily:"monospace",color:MIL,width:24,textAlign:"right"}}>{c}</span>
-    </div>)}</div>
+    {/* ───── 月 ───── */}
+    {stab==="month"&&<div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+        <NavBtn onClick={()=>setViewY(y=>y-1)} ch="◀"/><span style={{fontFamily:"monospace",fontSize:14,fontWeight:700}}>{viewY}</span><NavBtn onClick={()=>setViewY(y=>y+1)} ch="▶"/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
+        {Array.from({length:12},(_,i)=>{const ym=`${viewY}-${String(i+1).padStart(2,"0")}`;const total=moMins(viewY,i+1);const isSel=selM===ym;
+          return<div key={ym} onClick={()=>setSelM(ym)} style={{background:C.cd,border:`1.5px solid ${isSel?MIL:C.bd}`,borderRadius:6,padding:"10px 8px",cursor:"pointer",textAlign:"center"}}>
+            <div style={{fontSize:11,fontFamily:"monospace",color:C.mt,marginBottom:4}}>{mNames[i]}</div>
+            <div style={{fontSize:13,fontFamily:"monospace",color:total?MIL:C.mt,fontWeight:700}}>{fmm(total)}</div>
+          </div>;})}
+      </div>
+      {(()=>{const mTotal=moMins(selMY,selMM);const mDs=moDates(selMY,selMM);const mAct=mDs.filter(d=>log[d]>0).length;
+        return<div style={{marginTop:14,padding:"12px 0",borderTop:`1px solid ${C.bd}`}}>
+          <div style={{display:"flex",justifyContent:"space-around",marginBottom:12}}>
+            {[["月合計",fmm(mTotal)],[`日均(${mAct}天)`,fmm(mAct?Math.round(mTotal/mAct):0)],["活躍/天數",`${mAct}/${mDs.length}`]].map(([l,v])=><div key={l} style={{textAlign:"center"}}>
+              <div style={{fontSize:9,color:C.mt,fontFamily:"monospace",marginBottom:2}}>{l}</div>
+              <div style={{fontSize:15,fontWeight:700,color:MIL,fontFamily:"monospace"}}>{v}</div>
+            </div>)}
+          </div>
+          <div style={{position:"relative",height:80}}>
+            <GridLines/>
+            <div style={{display:"flex",alignItems:"flex-end",gap:3,height:"100%",position:"relative",zIndex:2}}>
+              {selMWks.map(wk=>{const wt=sumLog(log,wkDates(wk));const h=Math.round(wt/selMWkMax*76);
+                return<div key={wk} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",height:"100%"}}>
+                  <div style={{width:"100%",height:h||2,background:MIL_DIM,minHeight:2}}/>
+                  <div style={{fontSize:8,color:C.mt,fontFamily:"monospace",marginTop:4}}>{wk.slice(5,7)}/{wk.slice(8)}</div>
+                </div>;})}
+            </div>
+          </div>
+        </div>;})()}
+    </div>}
 
-    {cf.length>0&&<><MilSL ch="高頻混淆爭點"/><div style={{marginBottom:8}}>{cf.map(i=><div key={i.id} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.bd}`,fontSize:13,fontFamily:"monospace"}}><span>{i.name}<span style={{marginLeft:6}}><ST s={i.subject}/></span></span><span style={{color:C.dg,fontWeight:700}}>{i.cc}x</span></div>)}</div></>}
+    {/* ───── 趨勢 ───── */}
+    {stab==="trend"&&<div>
+      <MilSL ch={`每日複習時間（近 30 天）max: ${fmm(tMax30)}`}/>
+      <div style={{position:"relative",height:90,marginBottom:4}}>
+        <GridLines/>
+        <div style={{display:"flex",alignItems:"flex-end",gap:2,height:"100%",position:"relative",zIndex:2}}>
+          {t30.map((d,i)=>{const h=Math.round(d.mins/tMax30*86);return<div key={i} title={`${d.date}: ${fmm(d.mins)}`} style={{flex:1,height:"100%",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
+            <div style={{width:"100%",height:h||2,background:d.date===today?MIL:MIL_DIM,minHeight:2}}/>
+          </div>;})}
+        </div>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.mt,fontFamily:"monospace",marginBottom:16}}><span>T-30</span><span>TODAY</span></div>
+
+      <MilSL ch={`每週複習時間（近 12 週）max: ${fmm(tMaxWk)}`}/>
+      <div style={{position:"relative",height:90,marginBottom:4}}>
+        <GridLines/>
+        <div style={{display:"flex",alignItems:"flex-end",gap:3,height:"100%",position:"relative",zIndex:2}}>
+          {t12wk.map(({wk,total},i)=>{const h=Math.round(total/tMaxWk*86);return<div key={i} title={`${wk}~: ${fmm(total)}`} style={{flex:1,height:"100%",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
+            <div style={{width:"100%",height:h||2,background:MIL_DIM,minHeight:2}}/>
+          </div>;})}
+        </div>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.mt,fontFamily:"monospace",marginBottom:16}}><span>{t12wk[0]?.wk?.slice(5)}</span><span>THIS WK</span></div>
+
+      <MilSL ch={`每月複習時間（近 12 月）max: ${fmm(tMaxMo)}`}/>
+      <div style={{position:"relative",height:90,marginBottom:4}}>
+        <GridLines/>
+        <div style={{display:"flex",alignItems:"flex-end",gap:3,height:"100%",position:"relative",zIndex:2}}>
+          {t12mo.map(({label,total},i)=>{const h=Math.round(total/tMaxMo*86);return<div key={i} title={`${label}: ${fmm(total)}`} style={{flex:1,height:"100%",display:"flex",flexDirection:"column",justifyContent:"flex-end"}}>
+            <div style={{width:"100%",height:h||2,background:MIL_DIM,minHeight:2}}/>
+          </div>;})}
+        </div>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.mt,fontFamily:"monospace",marginBottom:16}}><span>{t12mo[0]?.label}</span><span>THIS MO</span></div>
+
+      <MilSL ch="每日科目題數（近 14 天）"/>
+      <div style={{position:"relative",height:90,marginBottom:4}}>
+        <GridLines/>
+        <div style={{display:"flex",alignItems:"flex-end",gap:2,height:"100%",position:"relative",zIndex:2}}>
+          {t14.map((date,i)=>{
+            const segs=SUBJECTS.map(s=>({s,c:plog[date]?.[s]?.count||0})).filter(x=>x.c>0);
+            const total=segs.reduce((a,x)=>a+x.c,0);
+            const h=Math.round(total/t14Max*86);
+            let offset=0;
+            return<div key={i} title={`${date}: ${total}題`} style={{flex:1,height:"100%",position:"relative"}}>
+              {h>0&&segs.map(({s,c})=>{const sh=Math.round(c/total*h)||1;const b=offset;offset+=sh;return<div key={s} style={{position:"absolute",bottom:b,left:0,right:0,height:sh,background:SUB_C[s]}}/>;} )}
+              {h===0&&<div style={{position:"absolute",bottom:0,left:0,right:0,height:2,background:C.bd}}/>}
+            </div>;})}
+        </div>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.mt,fontFamily:"monospace",marginBottom:8}}><span>T-14</span><span>TODAY</span></div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:"4px 10px"}}>
+        {SUBJECTS.filter(s=>t14.some(d=>plog[d]?.[s]?.count>0)).map(s=><span key={s} style={{fontSize:9,fontFamily:"monospace",color:C.mt,display:"flex",alignItems:"center",gap:3}}><span style={{width:7,height:7,background:SUB_C[s],display:"inline-block",flexShrink:0}}/>{s}</span>)}
+      </div>
+    </div>}
   </div>;
 }
