@@ -447,7 +447,7 @@ function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,
   const[newBTitle,setNewBTitle]=useState("");const[newBTotal,setNewBTotal]=useState("");
   const[bookSaving,setBookSaving]=useState(false);
   useEffect(()=>{setSelBook(null);setAddingBook(false);},[sub]);
-  async function handleAdd(){if(!cnt&&!mins)return;setSaving(true);setSaveErr(null);try{await savePractice(sub,cnt,mins);if(selBook&&cnt)await logBookPractice(selBook,today,Number(cnt));setCnt("");setMins("");setSelBook(null);}catch(e){setSaveErr("儲存失敗："+e.message);}finally{setSaving(false);}}
+  async function handleAdd(){if(!cnt&&!mins)return;setSaving(true);setSaveErr(null);try{await savePractice(sub,cnt,mins);}catch(e){setSaveErr("儲存失敗："+e.message);setSaving(false);return;}if(selBook&&cnt){try{await logBookPractice(selBook,today,Number(cnt));}catch(e){setSaveErr("書籍進度儲存失敗（請確認 book_log RLS 已停用）："+e.message);}}setCnt("");setMins("");setSelBook(null);setSaving(false);}
   async function handleAddBook(){if(!newBTitle.trim()||!newBTotal)return;setBookSaving(true);try{await saveBook(sub,newBTitle.trim(),newBTotal);setNewBTitle("");setNewBTotal("");setAddingBook(false);}catch(e){const msg=e.message||"";setSaveErr(msg.includes("schema cache")||msg.includes("does not exist")?"請先至 Supabase Dashboard → SQL Editor 建立 books / book_log 資料表（見說明文件）":"書籍新增失敗："+msg);}finally{setBookSaving(false);}}
 
   // 日 state
@@ -527,9 +527,10 @@ function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,
       <MilSL ch="今日練習記錄"/>
       <div style={{marginBottom:4}}>
         {todayEntries.length>0
-          ?<div style={{marginBottom:10}}>{todayEntries.map(s=>{const d=plog[today][s];return<div key={s} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:`1px solid ${C.bd}`}}>
+          ?<div style={{marginBottom:10}}>{todayEntries.map(s=>{const d=plog[today][s];const linkedBooks=books.filter(b=>b.subject===s&&(bookLog[b.id]||0)>0);return<div key={s} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:`1px solid ${C.bd}`}}>
             <span style={{width:8,height:8,background:SUB_C[s],flexShrink:0,display:"inline-block"}}/>
             <span style={{flex:1,fontSize:14,fontFamily:"monospace"}}>{s}</span>
+            {linkedBooks.length>0&&<span style={{fontSize:11,fontFamily:"monospace",color:MIL,background:MIL+"18",padding:"1px 5px",borderRadius:3}}>📖{linkedBooks.map(b=>b.title).join("、")}</span>}
             <span style={{fontSize:14,fontFamily:"monospace",color:MIL}}>{d.count}題</span>
             <span style={{fontSize:14,fontFamily:"monospace",color:C.mt,marginLeft:8}}>{d.minutes}分</span>
           </div>;})}
@@ -546,9 +547,10 @@ function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,
             <button onClick={handleAdd} disabled={saving||(!cnt&&!mins)} style={{background:MIL,color:"#000",fontWeight:700,fontSize:17,padding:"7px 14px",borderRadius:6,flexShrink:0}}>{saving?"…":"＋"}</button>
           </div>
           {/* 書籍 chips */}
+          {books.filter(b=>b.subject===sub).length>0&&<div style={{fontSize:11,color:C.mt,fontFamily:"monospace",marginBottom:4}}>點選書籍可連結本次題數記錄：</div>}
           <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center"}}>
-            {books.filter(b=>b.subject===sub).map(b=>{const done=bookLog[b.id]||0;const pct=b.total>0?Math.min(100,Math.round(done/b.total*100)):0;const isSel=selBook===b.id;return<div key={b.id} style={{display:"flex",alignItems:"center",gap:0,border:`1px solid ${isSel?MIL:C.bd}`,borderRadius:4,overflow:"hidden",cursor:"pointer"}} onClick={()=>setSelBook(isSel?null:b.id)}>
-              <span style={{padding:"4px 8px",fontSize:13,fontFamily:"monospace",color:isSel?MIL:C.tx,background:isSel?MIL+"18":"transparent",userSelect:"none"}}>{b.title} <span style={{color:C.mt,fontSize:11}}>{pct}%</span></span>
+            {books.filter(b=>b.subject===sub).map(b=>{const done=bookLog[b.id]||0;const pct=b.total>0?Math.min(100,Math.round(done/b.total*100)):0;const isSel=selBook===b.id;return<div key={b.id} style={{display:"flex",alignItems:"center",gap:0,border:`1px solid ${isSel?MIL:C.bd}`,borderRadius:4,overflow:"hidden",cursor:"pointer",background:isSel?MIL+"18":"transparent"}} onClick={()=>setSelBook(isSel?null:b.id)}>
+              <span style={{padding:"4px 8px",fontSize:13,fontFamily:"monospace",color:isSel?MIL:C.tx,userSelect:"none"}}>{isSel?"✓ ":""}{b.title} <span style={{color:C.mt,fontSize:11}}>{pct}%</span></span>
               <span onClick={e=>{e.stopPropagation();deleteBook(b.id);if(selBook===b.id)setSelBook(null);}} style={{padding:"4px 6px",fontSize:11,color:C.mt,borderLeft:`1px solid ${C.bd}`,cursor:"pointer",userSelect:"none"}}>✕</span>
             </div>;})}
             {!addingBook&&<button onClick={()=>setAddingBook(true)} style={{background:"transparent",border:`1px dashed ${C.bd}`,borderRadius:4,padding:"4px 8px",fontSize:13,color:C.mt,cursor:"pointer"}}>＋ 新書</button>}
