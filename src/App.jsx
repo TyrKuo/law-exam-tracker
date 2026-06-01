@@ -448,7 +448,7 @@ function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,
   const[bookSaving,setBookSaving]=useState(false);
   useEffect(()=>{setSelBook(null);setAddingBook(false);},[sub]);
   async function handleAdd(){if(!cnt&&!mins)return;setSaving(true);setSaveErr(null);try{await savePractice(sub,cnt,mins);if(selBook&&cnt)await logBookPractice(selBook,today,Number(cnt));setCnt("");setMins("");setSelBook(null);}catch(e){setSaveErr("儲存失敗："+e.message);}finally{setSaving(false);}}
-  async function handleAddBook(){if(!newBTitle.trim()||!newBTotal)return;setBookSaving(true);try{await saveBook(sub,newBTitle.trim(),newBTotal);setNewBTitle("");setNewBTotal("");setAddingBook(false);}catch(e){setSaveErr("書籍新增失敗："+e.message);}finally{setBookSaving(false);}}
+  async function handleAddBook(){if(!newBTitle.trim()||!newBTotal)return;setBookSaving(true);try{await saveBook(sub,newBTitle.trim(),newBTotal);setNewBTitle("");setNewBTotal("");setAddingBook(false);}catch(e){const msg=e.message||"";setSaveErr(msg.includes("schema cache")||msg.includes("does not exist")?"請先至 Supabase Dashboard → SQL Editor 建立 books / book_log 資料表（見說明文件）":"書籍新增失敗："+msg);}finally{setBookSaving(false);}}
 
   // 日 state
   const[viewYM,setViewYM]=useState(today.slice(0,7));
