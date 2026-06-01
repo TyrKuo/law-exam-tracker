@@ -172,11 +172,11 @@ function EP({issue,issues,allTags,editIssue,onDone}){
 
 // ═══ 主 App ═══
 export default function App(){
-  const[tab,setTab]=useState("dashboard");const[issues,setIssues]=useState(null);const[log,setLog]=useState({});const[plog,setPlog]=useState({});const[sprint,setSprint]=useState(false);const[limit,setLimit]=useState(30);const[sync,setSync]=useState("loading");const[vid,setVid]=useState(null);const[fc,_setFc]=useState(false);const fcR=useRef(false);const setFc=v=>{fcR.current=v;_setFc(v);};const[draft,setDraft]=useState({...EMPTY_DRAFT});const ss=useRef(Date.now());
+  const[tab,setTab]=useState("dashboard");const[issues,setIssues]=useState(null);const[log,setLog]=useState({});const[plog,setPlog]=useState({});const[books,setBooks]=useState([]);const[bookLog,setBookLog]=useState({});const[sprint,setSprint]=useState(false);const[limit,setLimit]=useState(30);const[sync,setSync]=useState("loading");const[vid,setVid]=useState(null);const[fc,_setFc]=useState(false);const fcR=useRef(false);const setFc=v=>{fcR.current=v;_setFc(v);};const[draft,setDraft]=useState({...EMPTY_DRAFT});const ss=useRef(Date.now());
 
-  const load=useCallback(async()=>{try{setSync("loading");const[iR,lR,sR,dR,pR]=await Promise.all([supabase.from("issues").select("*"),supabase.from("study_log").select("*"),supabase.from("settings").select("*").eq("key","sprint_mode").maybeSingle(),supabase.from("settings").select("*").eq("key","daily_limit").maybeSingle(),supabase.from("practice_log").select("*")]);if(iR.error)throw iR.error;setIssues((iR.data||[]).map(db2i));const l={};(lR.data||[]).forEach(r=>{l[r.date]=r.minutes;});setLog(l);const pl={};(pR.data||[]).forEach(r=>{if(!pl[r.date])pl[r.date]={};pl[r.date][r.subject]={count:r.count,minutes:r.minutes};});setPlog(pl);setSprint(sR.data?.value===true);if(dR.data?.value)setLimit(dR.data.value);setSync("synced");}catch(e){console.error(e);setSync("error");}},[]);
+  const load=useCallback(async()=>{try{setSync("loading");const[iR,lR,sR,dR,pR,bR,blR]=await Promise.all([supabase.from("issues").select("*"),supabase.from("study_log").select("*"),supabase.from("settings").select("*").eq("key","sprint_mode").maybeSingle(),supabase.from("settings").select("*").eq("key","daily_limit").maybeSingle(),supabase.from("practice_log").select("*"),supabase.from("books").select("*"),supabase.from("book_log").select("*")]);if(iR.error)throw iR.error;setIssues((iR.data||[]).map(db2i));const l={};(lR.data||[]).forEach(r=>{l[r.date]=r.minutes;});setLog(l);const pl={};(pR.data||[]).forEach(r=>{if(!pl[r.date])pl[r.date]={};pl[r.date][r.subject]={count:r.count,minutes:r.minutes};});setPlog(pl);setSprint(sR.data?.value===true);if(dR.data?.value)setLimit(dR.data.value);setBooks(bR.data||[]);const bl={};(blR.data||[]).forEach(r=>{bl[r.book_id]=(bl[r.book_id]||0)+r.count;});setBookLog(bl);setSync("synced");}catch(e){console.error(e);setSync("error");}},[]);
 
-  useEffect(()=>{load();const ch=supabase.channel("sync").on("postgres_changes",{event:"*",schema:"public",table:"issues"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"study_log"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"settings"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"practice_log"},()=>{if(!fcR.current)load();}).subscribe();ss.current=Date.now();return()=>{ch.unsubscribe();const el=Math.floor((Date.now()-ss.current)/60000);if(el>0)supabase.from("study_log").upsert({date:td(),minutes:(log[td()]||0)+el});};},[load]);
+  useEffect(()=>{load();const ch=supabase.channel("sync").on("postgres_changes",{event:"*",schema:"public",table:"issues"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"study_log"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"settings"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"practice_log"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"books"},()=>{if(!fcR.current)load();}).on("postgres_changes",{event:"*",schema:"public",table:"book_log"},()=>{if(!fcR.current)load();}).subscribe();ss.current=Date.now();return()=>{ch.unsubscribe();const el=Math.floor((Date.now()-ss.current)/60000);if(el>0)supabase.from("study_log").upsert({date:td(),minutes:(log[td()]||0)+el});};},[load]);
 
   const gDue=i=>{if(sprint&&i.stage<6){const d=new Date(i.lastReviewed||i.created);d.setDate(d.getDate()+2);return d.toISOString().split("T")[0];}return i.nextDate;};
   const isDue=i=>!i.mastered&&i.stage<6&&gDue(i)<=td();
@@ -189,6 +189,9 @@ export default function App(){
   async function togSp(){const n=!sprint;setSprint(n);await supabase.from("settings").upsert({key:"sprint_mode",value:n});}
   async function setLim(v){const val=Math.max(1,Math.min(200,v));setLimit(val);await supabase.from("settings").upsert({key:"daily_limit",value:val});}
   async function savePractice(sub,cnt,mins){const c=parseInt(cnt)||0,m=parseInt(mins)||0,d=td();setPlog(p=>({...p,[d]:{...p[d],[sub]:{count:c,minutes:m}}}));const{error}=await supabase.from("practice_log").upsert({date:d,subject:sub,count:c,minutes:m},{onConflict:"date,subject"});if(error)throw new Error(error.message||error.code||JSON.stringify(error));}
+  async function saveBook(subject,title,total){const{data,error}=await supabase.from("books").insert({subject,title,total:parseInt(total)||0}).select().single();if(error)throw new Error(error.message||error.code||JSON.stringify(error));setBooks(prev=>[...prev,data]);}
+  async function deleteBook(id){await supabase.from("books").delete().eq("id",id);setBooks(prev=>prev.filter(b=>b.id!==id));setBookLog(prev=>{const n={...prev};delete n[id];return n;});}
+  async function logBookPractice(bookId,date,count){const{data:ex}=await supabase.from("book_log").select("count").eq("book_id",bookId).eq("date",date).maybeSingle();const newCount=(ex?.count||0)+Number(count);await supabase.from("book_log").upsert({book_id:bookId,date,count:newCount});const{data}=await supabase.from("book_log").select("*");const bl={};(data||[]).forEach(r=>{bl[r.book_id]=(bl[r.book_id]||0)+r.count;});setBookLog(bl);}
 
   const openD=id=>setVid(id);
   const allTags=[...new Set((issues||[]).flatMap(i=>i.tags||[]))].sort();
@@ -217,7 +220,7 @@ export default function App(){
         {tab==="dashboard"&&<Dash issues={issues} due={todayDue} ovf={ovf} limit={limit} setLim={setLim} rate={rate} gDue={gDue} openD={openD} startFC={()=>setFc(true)}/>}
         {tab==="add"&&<AddP issues={issues} onAdd={addI} setTab={setTab} allTags={allTags} draft={draft} setDraft={setDraft}/>}
         {tab==="overview"&&<OvW issues={issues} rate={rate} isDue={isDue} editI={editI} delM={delM} del1={del1} allTags={allTags} openD={openD}/>}
-        {tab==="stats"&&<StatsP issues={issues} log={log} plog={plog} savePractice={savePractice}/>}
+        {tab==="stats"&&<StatsP issues={issues} log={log} plog={plog} savePractice={savePractice} books={books} bookLog={bookLog} saveBook={saveBook} deleteBook={deleteBook} logBookPractice={logBookPractice}/>}
       </div>
       {vi&&<Ov ch={<Det issue={vi} issues={issues} allTags={allTags} editI={editI} del1={del1} rate={rate} isDue={isDue} openD={openD} oc={()=>setVid(null)}/>} oc={()=>setVid(null)}/>}
     </div>
@@ -428,7 +431,7 @@ const wkStart=s=>{const d=new Date(s);d.setDate(d.getDate()-((d.getDay()+6)%7));
 const sumLog=(log,dates)=>dates.reduce((a,d)=>a+(log[d]||0),0);
 
 // ═══ 統計 ═══
-function StatsP({issues,log,plog,savePractice}){
+function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,logBookPractice}){
   const today=td();
   const MIL="#22c55e";const MIL_DIM="rgba(34,197,94,0.12)";
 
@@ -439,7 +442,13 @@ function StatsP({issues,log,plog,savePractice}){
   const[sub,setSub]=useState(SUBJECTS[0]);
   const[cnt,setCnt]=useState("");const[mins,setMins]=useState("");
   const[saving,setSaving]=useState(false);const[saveErr,setSaveErr]=useState(null);
-  async function handleAdd(){if(!cnt&&!mins)return;setSaving(true);setSaveErr(null);try{await savePractice(sub,cnt,mins);setCnt("");setMins("");}catch(e){setSaveErr("儲存失敗："+e.message);}finally{setSaving(false);}}
+  const[selBook,setSelBook]=useState(null);
+  const[addingBook,setAddingBook]=useState(false);
+  const[newBTitle,setNewBTitle]=useState("");const[newBTotal,setNewBTotal]=useState("");
+  const[bookSaving,setBookSaving]=useState(false);
+  useEffect(()=>{setSelBook(null);setAddingBook(false);},[sub]);
+  async function handleAdd(){if(!cnt&&!mins)return;setSaving(true);setSaveErr(null);try{await savePractice(sub,cnt,mins);if(selBook&&cnt)await logBookPractice(selBook,today,Number(cnt));setCnt("");setMins("");setSelBook(null);}catch(e){setSaveErr("儲存失敗："+e.message);}finally{setSaving(false);}}
+  async function handleAddBook(){if(!newBTitle.trim()||!newBTotal)return;setBookSaving(true);try{await saveBook(sub,newBTitle.trim(),newBTotal);setNewBTitle("");setNewBTotal("");setAddingBook(false);}catch(e){setSaveErr("書籍新增失敗："+e.message);}finally{setBookSaving(false);}}
 
   // 日 state
   const[viewYM,setViewYM]=useState(today.slice(0,7));
@@ -527,16 +536,48 @@ function StatsP({issues,log,plog,savePractice}){
           </div>
           :<div style={{fontSize:13,color:C.mt,padding:"4px 0 10px",fontFamily:"monospace"}}>— NO RECORD —</div>
         }
-        <div style={{display:"flex",gap:8,alignItems:"center",padding:"10px 0",borderTop:`1px solid ${C.bd}`}}>
-          <select value={sub} onChange={e=>setSub(e.target.value)} style={{flex:1,background:C.sf,color:C.tx,border:`1px solid ${C.bd}`,borderRadius:6,padding:"6px 8px",fontSize:15,outline:"none"}}>
-            {SUBJECTS.map(s=><option key={s} value={s}>{s}</option>)}
-          </select>
-          <input type="number" inputMode="numeric" min="0" placeholder="題數" value={cnt} onChange={e=>setCnt(e.target.value)} style={{...inBase,width:64}}/>
-          <input type="number" inputMode="numeric" min="0" placeholder="分鐘" value={mins} onChange={e=>setMins(e.target.value)} style={{...inBase,width:64}}/>
-          <button onClick={handleAdd} disabled={saving||(!cnt&&!mins)} style={{background:MIL,color:"#000",fontWeight:700,fontSize:17,padding:"7px 14px",borderRadius:6,flexShrink:0}}>{saving?"…":"＋"}</button>
+        <div style={{padding:"10px 0",borderTop:`1px solid ${C.bd}`}}>
+          <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
+            <select value={sub} onChange={e=>setSub(e.target.value)} style={{flex:1,background:C.sf,color:C.tx,border:`1px solid ${C.bd}`,borderRadius:6,padding:"6px 8px",fontSize:15,outline:"none"}}>
+              {SUBJECTS.map(s=><option key={s} value={s}>{s}</option>)}
+            </select>
+            <input type="number" inputMode="numeric" min="0" placeholder="題數" value={cnt} onChange={e=>setCnt(e.target.value)} style={{...inBase,width:64}}/>
+            <input type="number" inputMode="numeric" min="0" placeholder="分鐘" value={mins} onChange={e=>setMins(e.target.value)} style={{...inBase,width:64}}/>
+            <button onClick={handleAdd} disabled={saving||(!cnt&&!mins)} style={{background:MIL,color:"#000",fontWeight:700,fontSize:17,padding:"7px 14px",borderRadius:6,flexShrink:0}}>{saving?"…":"＋"}</button>
+          </div>
+          {/* 書籍 chips */}
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,alignItems:"center"}}>
+            {books.filter(b=>b.subject===sub).map(b=>{const done=bookLog[b.id]||0;const pct=b.total>0?Math.min(100,Math.round(done/b.total*100)):0;const isSel=selBook===b.id;return<div key={b.id} style={{display:"flex",alignItems:"center",gap:0,border:`1px solid ${isSel?MIL:C.bd}`,borderRadius:4,overflow:"hidden",cursor:"pointer"}} onClick={()=>setSelBook(isSel?null:b.id)}>
+              <span style={{padding:"4px 8px",fontSize:13,fontFamily:"monospace",color:isSel?MIL:C.tx,background:isSel?MIL+"18":"transparent",userSelect:"none"}}>{b.title} <span style={{color:C.mt,fontSize:11}}>{pct}%</span></span>
+              <span onClick={e=>{e.stopPropagation();deleteBook(b.id);if(selBook===b.id)setSelBook(null);}} style={{padding:"4px 6px",fontSize:11,color:C.mt,borderLeft:`1px solid ${C.bd}`,cursor:"pointer",userSelect:"none"}}>✕</span>
+            </div>;})}
+            {!addingBook&&<button onClick={()=>setAddingBook(true)} style={{background:"transparent",border:`1px dashed ${C.bd}`,borderRadius:4,padding:"4px 8px",fontSize:13,color:C.mt,cursor:"pointer"}}>＋ 新書</button>}
+          </div>
+          {/* inline 新增書籍表單 */}
+          {addingBook&&<div style={{display:"flex",gap:6,alignItems:"center",marginTop:8}}>
+            <input placeholder="書名" value={newBTitle} onChange={e=>setNewBTitle(e.target.value)} style={{...inBase,flex:1,textAlign:"left"}}/>
+            <input type="number" inputMode="numeric" min="1" placeholder="總題數" value={newBTotal} onChange={e=>setNewBTotal(e.target.value)} style={{...inBase,width:72}}/>
+            <button onClick={handleAddBook} disabled={bookSaving||!newBTitle.trim()||!newBTotal} style={{background:MIL,color:"#000",fontWeight:700,fontSize:15,padding:"5px 10px",borderRadius:4}}>{bookSaving?"…":"✓"}</button>
+            <button onClick={()=>{setAddingBook(false);setNewBTitle("");setNewBTotal("");}} style={{background:"transparent",border:`1px solid ${C.bd}`,color:C.mt,fontSize:15,padding:"5px 10px",borderRadius:4}}>✕</button>
+          </div>}
         </div>
         {saveErr&&<div style={{fontSize:13,color:C.dg,fontFamily:"monospace",paddingBottom:8}}>{saveErr}</div>}
       </div>
+      {books.length>0&&<><MilSL ch="書籍進度"/>
+      <div style={{marginBottom:8}}>{SUBJECTS.filter(s=>books.some(b=>b.subject===s)).map(s=>{const sBooks=books.filter(b=>b.subject===s);return<div key={s} style={{marginBottom:12}}>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+          <span style={{width:6,height:6,background:SUB_C[s],display:"inline-block",flexShrink:0}}/>
+          <span style={{fontSize:13,fontFamily:"monospace",color:SUB_C[s],fontWeight:600}}>{s}</span>
+        </div>
+        {sBooks.map(b=>{const done=bookLog[b.id]||0;const pct=b.total>0?Math.min(100,Math.round(done/b.total*100)):0;return<div key={b.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7,paddingLeft:14}}>
+          <span style={{flex:1,fontSize:13,fontFamily:"monospace",color:C.tx,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{b.title}</span>
+          <div style={{width:80,height:5,background:C.bd,flexShrink:0,overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${pct}%`,background:MIL,transition:"width .4s"}}/>
+          </div>
+          <span style={{fontSize:12,fontFamily:"monospace",color:C.mt,flexShrink:0,width:64,textAlign:"right"}}>{done}/{b.total} {pct}%</span>
+        </div>;})}
+      </div>;})}
+      </div></>}
       <MilSL ch="近 7 日題數"/>
       <div style={{marginBottom:8}}>
         {sub7.every(x=>x.total===0)?<div style={{fontSize:13,color:C.mt,padding:"6px 0",fontFamily:"monospace"}}>— NO DATA —</div>
