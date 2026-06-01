@@ -141,11 +141,12 @@ function LinkTA({value,onChange,issues,placeholder}){
 }
 
 // 各科進度列
-const SRow=({sub,iss})=>{
+const SRow=({sub,iss,plog={}})=>{
   const s=subSt(iss,sub);const c=SUB_C[sub];
-  if(!s.total)return<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}><span style={{width:52,fontSize:14,color:c,fontWeight:600,flexShrink:0}}>{sub}</span><div className="prog" style={{flex:1}}/><span style={{fontSize:12,color:C.mt,width:70,textAlign:"right"}}>0 題</span></div>;
+  const done=Object.values(plog).reduce((sum,day)=>sum+(day[sub]?.count||0),0);
+  if(!s.total&&!done)return<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}><span style={{width:52,fontSize:14,color:c,fontWeight:600,flexShrink:0}}>{sub}</span><div className="prog" style={{flex:1}}/><span style={{fontSize:12,color:C.mt,width:70,textAlign:"right"}}>—</span></div>;
   const pc=s.avgPct>=70?"#34d399":s.avgPct>=40?"#fb923c":"#f87171";
-  return<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}><span style={{width:52,fontSize:14,color:c,fontWeight:600,flexShrink:0}}>{sub}</span><div className="prog" style={{flex:1}}><div className="progf" style={{width:`${s.avgPct}%`,background:pc}}/></div><span style={{fontSize:12,color:C.mt,width:90,textAlign:"right",flexShrink:0}}>{s.avgPct}% · {s.mastered}/{s.total}</span></div>;
+  return<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}><span style={{width:52,fontSize:14,color:c,fontWeight:600,flexShrink:0}}>{sub}</span><div className="prog" style={{flex:1}}><div className="progf" style={{width:`${s.avgPct}%`,background:pc}}/></div><span style={{fontSize:12,color:C.mt,width:100,textAlign:"right",flexShrink:0}}>爭{s.mastered}/{s.total} · 解{done}</span></div>;
 };
 
 // 編輯面板（通用）
@@ -191,6 +192,7 @@ export default function App(){
   async function savePractice(sub,cnt,mins){const c=parseInt(cnt)||0,m=parseInt(mins)||0,d=td();setPlog(p=>({...p,[d]:{...p[d],[sub]:{count:c,minutes:m}}}));const{error}=await supabase.from("practice_log").upsert({date:d,subject:sub,count:c,minutes:m},{onConflict:"date,subject"});if(error)throw new Error(error.message||error.code||JSON.stringify(error));}
   async function saveBook(subject,title,total){const{data,error}=await supabase.from("books").insert({subject,title,total:parseInt(total)||0}).select().single();if(error)throw new Error(error.message||error.code||JSON.stringify(error));setBooks(prev=>[...prev,data]);}
   async function deleteBook(id){await supabase.from("books").delete().eq("id",id);setBooks(prev=>prev.filter(b=>b.id!==id));setBookLog(prev=>{const n={...prev};delete n[id];return n;});}
+  async function updateBook(id,title,total){const vals={title,total:parseInt(total)||0};const{error}=await supabase.from("books").update(vals).eq("id",id);if(error)throw new Error(error.message);setBooks(prev=>prev.map(b=>b.id===id?{...b,...vals}:b));}
   async function logBookPractice(bookId,date,count){const{data:ex}=await supabase.from("book_log").select("count").eq("book_id",bookId).eq("date",date).maybeSingle();const newCount=(ex?.count||0)+Number(count);await supabase.from("book_log").upsert({book_id:bookId,date,count:newCount});const{data}=await supabase.from("book_log").select("*");const bl={};(data||[]).forEach(r=>{bl[r.book_id]=(bl[r.book_id]||0)+r.count;});setBookLog(bl);}
 
   const openD=id=>setVid(id);
@@ -217,10 +219,10 @@ export default function App(){
         </div>
       </div>
       <div style={{padding:"16px 16px 0",maxWidth:680,margin:"0 auto"}}>
-        {tab==="dashboard"&&<Dash issues={issues} due={todayDue} ovf={ovf} limit={limit} setLim={setLim} rate={rate} gDue={gDue} openD={openD} startFC={()=>setFc(true)}/>}
+        {tab==="dashboard"&&<Dash issues={issues} due={todayDue} ovf={ovf} limit={limit} setLim={setLim} rate={rate} gDue={gDue} openD={openD} startFC={()=>setFc(true)} plog={plog}/>}
         {tab==="add"&&<AddP issues={issues} onAdd={addI} setTab={setTab} allTags={allTags} draft={draft} setDraft={setDraft}/>}
         {tab==="overview"&&<OvW issues={issues} rate={rate} isDue={isDue} editI={editI} delM={delM} del1={del1} allTags={allTags} openD={openD}/>}
-        {tab==="stats"&&<StatsP issues={issues} log={log} plog={plog} savePractice={savePractice} books={books} bookLog={bookLog} saveBook={saveBook} deleteBook={deleteBook} logBookPractice={logBookPractice}/>}
+        {tab==="stats"&&<StatsP issues={issues} log={log} plog={plog} savePractice={savePractice} books={books} bookLog={bookLog} saveBook={saveBook} deleteBook={deleteBook} logBookPractice={logBookPractice} updateBook={updateBook}/>}
       </div>
       {vi&&<Ov ch={<Det issue={vi} issues={issues} allTags={allTags} editI={editI} del1={del1} rate={rate} isDue={isDue} openD={openD} oc={()=>setVid(null)}/>} oc={()=>setVid(null)}/>}
     </div>
@@ -303,7 +305,7 @@ function Det({issue:is,issues,allTags,editI,del1,rate,isDue,openD,oc}){
 }
 
 // ═══ Dashboard ═══
-function Dash({issues,due,ovf,limit,setLim,rate,gDue,openD,startFC}){
+function Dash({issues,due,ovf,limit,setLim,rate,gDue,openD,startFC,plog}){
   const[el,sEl]=useState(false);const[tmp,sTmp]=useState(limit);
   const total=issues.length;const mastered=issues.filter(i=>i.mastered).length;
   const masteredPct=total?Math.round(mastered/total*100):0;
@@ -325,7 +327,7 @@ function Dash({issues,due,ovf,limit,setLim,rate,gDue,openD,startFC}){
       {!el?<><span style={{fontSize:16,fontWeight:700}}>{limit} 題</span>{ovf>0&&<span style={{fontSize:13,color:C.dg}}>（{ovf} 題延後）</span>}<button onClick={()=>{sTmp(limit);sEl(true);}} style={{background:"transparent",color:C.ac,border:`1px solid ${C.ac}`,fontSize:13,padding:"3px 10px",marginLeft:"auto"}}>調整</button></>
         :<><input type="number" value={tmp} onChange={e=>sTmp(Number(e.target.value))} min={1} max={200} style={{width:64,textAlign:"center",padding:"4px 6px",fontSize:16}}/><button onClick={()=>{setLim(tmp);sEl(false);}} style={{background:C.ac,color:"#fff",fontSize:13,padding:"5px 12px",fontWeight:600}}>確認</button><button onClick={()=>sEl(false)} style={{background:"transparent",color:C.mt,border:`1px solid ${C.bd}`,fontSize:13,padding:"5px 10px"}}>取消</button></>}
     </div>
-    <Card title="各科進度">{SUBJECTS.map(s=><SRow key={s} sub={s} iss={issues}/>)}</Card>
+    <Card title="各科進度">{SUBJECTS.map(s=><SRow key={s} sub={s} iss={issues} plog={plog}/>)}</Card>
     {Object.keys(gr).length>0&&<div style={{marginBottom:14}}>
       <div style={secT}>今日複習（{due.length}）</div>
       {Object.entries(gr).map(([s,l])=><div key={s} style={{marginBottom:14}}><div style={{fontSize:14,fontWeight:700,color:SUB_C[s],marginBottom:6}}>{s}</div><div style={{display:"flex",flexDirection:"column",gap:6}}>{l.map(i=><Row key={i.id} i={i} rate={rate} openD={openD}/>)}</div></div>)}
@@ -431,7 +433,7 @@ const wkStart=s=>{const d=new Date(s);d.setDate(d.getDate()-((d.getDay()+6)%7));
 const sumLog=(log,dates)=>dates.reduce((a,d)=>a+(log[d]||0),0);
 
 // ═══ 統計 ═══
-function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,logBookPractice}){
+function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,logBookPractice,updateBook}){
   const today=td();
   const MIL="#22c55e";const MIL_DIM="rgba(34,197,94,0.12)";
 
@@ -446,6 +448,9 @@ function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,
   const[addingBook,setAddingBook]=useState(false);
   const[newBTitle,setNewBTitle]=useState("");const[newBTotal,setNewBTotal]=useState("");
   const[bookSaving,setBookSaving]=useState(false);
+  const[editingBook,setEditingBook]=useState(null);
+  const[editBTitle,setEditBTitle]=useState("");const[editBTotal,setEditBTotal]=useState("");const[editBSaving,setEditBSaving]=useState(false);
+  async function handleEditBook(){setEditBSaving(true);try{await updateBook(editingBook,editBTitle,editBTotal);setEditingBook(null);}catch(e){setSaveErr("書籍更新失敗："+e.message);}finally{setEditBSaving(false);}}
   useEffect(()=>{setSelBook(null);setAddingBook(false);},[sub]);
   async function handleAdd(){if(!cnt&&!mins)return;setSaving(true);setSaveErr(null);try{await savePractice(sub,cnt,mins);}catch(e){setSaveErr("儲存失敗："+e.message);setSaving(false);return;}if(selBook&&cnt){try{await logBookPractice(selBook,today,Number(cnt));}catch(e){setSaveErr("書籍進度儲存失敗（請確認 book_log RLS 已停用）："+e.message);}}setCnt("");setMins("");setSelBook(null);setSaving(false);}
   async function handleAddBook(){if(!newBTitle.trim()||!newBTotal)return;setBookSaving(true);try{await saveBook(sub,newBTitle.trim(),newBTotal);setNewBTitle("");setNewBTotal("");setAddingBook(false);}catch(e){const msg=e.message||"";setSaveErr(msg.includes("schema cache")||msg.includes("does not exist")?"請先至 Supabase Dashboard → SQL Editor 建立 books / book_log 資料表（見說明文件）":"書籍新增失敗："+msg);}finally{setBookSaving(false);}}
@@ -571,13 +576,21 @@ function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,
           <span style={{width:6,height:6,background:SUB_C[s],display:"inline-block",flexShrink:0}}/>
           <span style={{fontSize:13,fontFamily:"monospace",color:SUB_C[s],fontWeight:600}}>{s}</span>
         </div>
-        {sBooks.map(b=>{const done=bookLog[b.id]||0;const pct=b.total>0?Math.min(100,Math.round(done/b.total*100)):0;return<div key={b.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7,paddingLeft:14}}>
-          <span style={{flex:1,fontSize:13,fontFamily:"monospace",color:C.tx,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{b.title}</span>
-          <div style={{width:80,height:5,background:C.bd,flexShrink:0,overflow:"hidden"}}>
-            <div style={{height:"100%",width:`${pct}%`,background:MIL,transition:"width .4s"}}/>
-          </div>
-          <span style={{fontSize:12,fontFamily:"monospace",color:C.mt,flexShrink:0,width:64,textAlign:"right"}}>{done}/{b.total} {pct}%</span>
-        </div>;})}
+        {sBooks.map(b=>{const done=bookLog[b.id]||0;const pct=b.total>0?Math.min(100,Math.round(done/b.total*100)):0;
+          if(editingBook===b.id)return<div key={b.id} style={{display:"flex",gap:5,alignItems:"center",marginBottom:7,paddingLeft:14}}>
+            <input value={editBTitle} onChange={e=>setEditBTitle(e.target.value)} style={{...inBase,flex:1,textAlign:"left"}}/>
+            <input type="number" value={editBTotal} onChange={e=>setEditBTotal(e.target.value)} style={{...inBase,width:64}} placeholder="總題"/>
+            <button onClick={handleEditBook} disabled={editBSaving} style={{background:MIL,color:"#000",fontWeight:700,fontSize:13,padding:"4px 8px",borderRadius:4}}>{editBSaving?"…":"✓"}</button>
+            <button onClick={()=>setEditingBook(null)} style={{background:"transparent",border:`1px solid ${C.bd}`,color:C.mt,fontSize:13,padding:"4px 8px",borderRadius:4}}>✕</button>
+          </div>;
+          return<div key={b.id} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7,paddingLeft:14}}>
+            <span style={{flex:1,fontSize:13,fontFamily:"monospace",color:C.tx,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{b.title}</span>
+            <div style={{width:80,height:5,background:C.bd,flexShrink:0,overflow:"hidden"}}>
+              <div style={{height:"100%",width:`${pct}%`,background:MIL,transition:"width .4s"}}/>
+            </div>
+            <span style={{fontSize:12,fontFamily:"monospace",color:C.mt,flexShrink:0,width:64,textAlign:"right"}}>{done}/{b.total} {pct}%</span>
+            <button onClick={()=>{setEditingBook(b.id);setEditBTitle(b.title);setEditBTotal(String(b.total));}} style={{background:"transparent",border:`1px solid ${C.bd}`,color:C.mt,fontSize:11,padding:"2px 5px",borderRadius:3,flexShrink:0}}>✎</button>
+          </div>;})}
       </div>;})}
       </div></>}
       <MilSL ch="近 7 日題數"/>
@@ -593,10 +606,10 @@ function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,
           </div>)}
       </div>
       <MilSL ch="各科複習進度"/>
-      <div style={{marginBottom:8}}>{SUBJECTS.map(s=>{const st=subSt(issues,s);const filled=Math.round(st.avgPct/100*6);return<div key={s} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+      <div style={{marginBottom:8}}>{SUBJECTS.map(s=>{const st=subSt(issues,s);const filled=Math.round(st.avgPct/100*6);const pdone=Object.values(plog).reduce((sum,day)=>sum+(day[s]?.count||0),0);return<div key={s} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
         <span style={{width:52,fontSize:13,fontFamily:"monospace",color:SUB_C[s],flexShrink:0,fontWeight:600}}>{s}</span>
         <div style={{flex:1,display:"flex",gap:2}}>{Array.from({length:6},(_,x)=><div key={x} style={{flex:1,height:8,background:x<filled?MIL:C.bd}}/>)}</div>
-        <span style={{fontSize:12,fontFamily:"monospace",color:C.mt,width:80,textAlign:"right",flexShrink:0}}>{st.avgPct}%[{st.mastered}/{st.total}]</span>
+        <span style={{fontSize:12,fontFamily:"monospace",color:C.mt,width:100,textAlign:"right",flexShrink:0}}>爭{st.mastered}/{st.total} · 解{pdone}</span>
       </div>;})}
       </div>
       <MilSL ch="每日複習時間（近 30 天）"/>
