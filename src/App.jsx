@@ -451,6 +451,8 @@ function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,
   const[editingBook,setEditingBook]=useState(null);
   const[editBTitle,setEditBTitle]=useState("");const[editBTotal,setEditBTotal]=useState("");const[editBSaving,setEditBSaving]=useState(false);
   async function handleEditBook(){setEditBSaving(true);try{await updateBook(editingBook,editBTitle,editBTotal);setEditingBook(null);}catch(e){setSaveErr("書籍更新失敗："+e.message);}finally{setEditBSaving(false);}}
+  const[editPSub,setEditPSub]=useState(null);const[editPCnt,setEditPCnt]=useState("");const[editPMins,setEditPMins]=useState("");const[editPSaving,setEditPSaving]=useState(false);
+  async function handleEditPractice(){setEditPSaving(true);try{await savePractice(editPSub,editPCnt,editPMins);setEditPSub(null);}catch(e){setSaveErr("更新失敗："+e.message);}finally{setEditPSaving(false);}}
   useEffect(()=>{setSelBook(null);setAddingBook(false);},[sub]);
   async function handleAdd(){if(!cnt&&!mins)return;setSaving(true);setSaveErr(null);try{await savePractice(sub,cnt,mins);}catch(e){setSaveErr("儲存失敗："+e.message);setSaving(false);return;}if(selBook&&cnt){try{await logBookPractice(selBook,today,Number(cnt));}catch(e){setSaveErr("書籍進度儲存失敗（請確認 book_log RLS 已停用）："+e.message);}}setCnt("");setMins("");setSelBook(null);setSaving(false);}
   async function handleAddBook(){if(!newBTitle.trim()||!newBTotal)return;setBookSaving(true);try{await saveBook(sub,newBTitle.trim(),newBTotal);setNewBTitle("");setNewBTotal("");setAddingBook(false);}catch(e){const msg=e.message||"";setSaveErr(msg.includes("schema cache")||msg.includes("does not exist")?"請先至 Supabase Dashboard → SQL Editor 建立 books / book_log 資料表（見說明文件）":"書籍新增失敗："+msg);}finally{setBookSaving(false);}}
@@ -532,13 +534,23 @@ function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,
       <MilSL ch="今日練習記錄"/>
       <div style={{marginBottom:4}}>
         {todayEntries.length>0
-          ?<div style={{marginBottom:10}}>{todayEntries.map(s=>{const d=plog[today][s];const linkedBooks=books.filter(b=>b.subject===s&&(bookLog[b.id]||0)>0);return<div key={s} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:`1px solid ${C.bd}`}}>
-            <span style={{width:8,height:8,background:SUB_C[s],flexShrink:0,display:"inline-block"}}/>
-            <span style={{flex:1,fontSize:14,fontFamily:"monospace"}}>{s}</span>
-            {linkedBooks.length>0&&<span style={{fontSize:11,fontFamily:"monospace",color:MIL,background:MIL+"18",padding:"1px 5px",borderRadius:3}}>📖{linkedBooks.map(b=>b.title).join("、")}</span>}
-            <span style={{fontSize:14,fontFamily:"monospace",color:MIL}}>{d.count}題</span>
-            <span style={{fontSize:14,fontFamily:"monospace",color:C.mt,marginLeft:8}}>{d.minutes}分</span>
-          </div>;})}
+          ?<div style={{marginBottom:10}}>{todayEntries.map(s=>{const d=plog[today][s];const linkedBooks=books.filter(b=>b.subject===s&&(bookLog[b.id]||0)>0);
+            if(editPSub===s)return<div key={s} style={{display:"flex",gap:6,alignItems:"center",padding:"5px 0",borderBottom:`1px solid ${C.bd}`}}>
+              <span style={{width:8,height:8,background:SUB_C[s],flexShrink:0,display:"inline-block"}}/>
+              <span style={{flex:1,fontSize:14,fontFamily:"monospace"}}>{s}</span>
+              <input type="number" inputMode="numeric" min="0" value={editPCnt} onChange={e=>setEditPCnt(e.target.value)} placeholder="題數" style={{...inBase,width:64}}/>
+              <input type="number" inputMode="numeric" min="0" value={editPMins} onChange={e=>setEditPMins(e.target.value)} placeholder="分鐘" style={{...inBase,width:64}}/>
+              <button onClick={handleEditPractice} disabled={editPSaving} style={{background:MIL,color:"#000",fontWeight:700,fontSize:14,padding:"5px 10px",borderRadius:4,flexShrink:0}}>{editPSaving?"…":"✓"}</button>
+              <button onClick={()=>setEditPSub(null)} style={{background:"transparent",border:`1px solid ${C.bd}`,color:C.mt,fontSize:14,padding:"5px 8px",borderRadius:4,flexShrink:0}}>✕</button>
+            </div>;
+            return<div key={s} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:`1px solid ${C.bd}`}}>
+              <span style={{width:8,height:8,background:SUB_C[s],flexShrink:0,display:"inline-block"}}/>
+              <span style={{flex:1,fontSize:14,fontFamily:"monospace"}}>{s}</span>
+              {linkedBooks.length>0&&<span style={{fontSize:11,fontFamily:"monospace",color:MIL,background:MIL+"18",padding:"1px 5px",borderRadius:3}}>📖{linkedBooks.map(b=>b.title).join("、")}</span>}
+              <span style={{fontSize:14,fontFamily:"monospace",color:MIL}}>{d.count}題</span>
+              <span style={{fontSize:14,fontFamily:"monospace",color:C.mt,marginLeft:8}}>{d.minutes}分</span>
+              <button onClick={()=>{setEditPSub(s);setEditPCnt(String(d.count||""));setEditPMins(String(d.minutes||""));}} style={{background:"transparent",border:`1px solid ${C.bd}`,color:MIL,fontSize:12,padding:"2px 6px",borderRadius:3,flexShrink:0}}>✎</button>
+            </div>;})}
           </div>
           :<div style={{fontSize:13,color:C.mt,padding:"4px 0 10px",fontFamily:"monospace"}}>— NO RECORD —</div>
         }
@@ -589,7 +601,7 @@ function StatsP({issues,log,plog,savePractice,books,bookLog,saveBook,deleteBook,
               <div style={{height:"100%",width:`${pct}%`,background:MIL,transition:"width .4s"}}/>
             </div>
             <span style={{fontSize:12,fontFamily:"monospace",color:C.mt,flexShrink:0,width:64,textAlign:"right"}}>{done}/{b.total} {pct}%</span>
-            <button onClick={()=>{setEditingBook(b.id);setEditBTitle(b.title);setEditBTotal(String(b.total));}} style={{background:"transparent",border:`1px solid ${C.bd}`,color:C.mt,fontSize:11,padding:"2px 5px",borderRadius:3,flexShrink:0}}>✎</button>
+            <button onClick={()=>{setEditingBook(b.id);setEditBTitle(b.title);setEditBTotal(String(b.total));}} style={{background:MIL+"18",border:`1px solid ${MIL}55`,color:MIL,fontSize:13,padding:"3px 7px",borderRadius:4,flexShrink:0}}>✎</button>
           </div>;})}
       </div>;})}
       </div></>}
